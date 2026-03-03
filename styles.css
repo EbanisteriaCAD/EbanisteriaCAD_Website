@@ -33,9 +33,7 @@ body {
   background: rgba(24, 24, 28, 0.94);
   border: 1px solid var(--brand-line);
   border-radius: 14px;
-  position: sticky;
-  top: 0.6rem;
-  z-index: 20;
+  position: static;
   backdrop-filter: blur(4px);
 }
 
