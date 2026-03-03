@@ -92,8 +92,7 @@
       { href: 'quote.html', label: 'Cotizaci\u00f3n' },
       { href: 'designs.html', label: 'Dise\u00f1os' },
       { href: 'pricing.html', label: 'Precios' },
-      { href: 'contact.html', label: 'Cont\u00e1ctenos' },
-      { href: 'admin.html', label: 'Admin' }
+      { href: 'contact.html', label: 'Cont\u00e1ctenos' }
     ];
 
     var navItems = links.map(function (link) {
