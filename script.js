@@ -1,12 +1,12 @@
-﻿(function () {
+(function () {
   var PAGE_PATH = window.location.pathname.split('/').pop() || 'index.html';
 
   var NAV_ITEMS = [
     { href: 'index.html', label: 'Inicio' },
     { href: 'about.html', label: 'Nosotros' },
-    { href: 'designs.html', label: 'Diseños' },
+    { href: 'designs.html', label: 'Dise\u00f1os' },
     { href: 'pricing.html', label: 'Precios' },
-    { href: 'contact.html', label: 'Contáctenos' }
+    { href: 'contact.html', label: 'Cont\u00e1ctenos' }
   ];
 
   function isActive(href) {
@@ -24,15 +24,17 @@
 
     header.innerHTML =
       '<div class="container topbar-inner">' +
-      '<a class="brand-logo-link" href="index.html">' +
-      '<img class="brand-logo" src="assets/logo.jpg" alt="Logo de Ebanistería CAD" />' +
+      '<a class="brand" href="index.html" aria-label="Inicio Ebanister\u00eda CAD">' +
+      '<span class="brand-logo-wrap">' +
+      '<img class="brand-logo" src="assets/logo.jpg" alt="Logo de Ebanister\u00eda CAD" />' +
+      '</span>' +
       '</a>' +
-      '<button class="nav-toggle" type="button" aria-label="Abrir menú" aria-controls="site-nav" aria-expanded="false">' +
+      '<button class="nav-toggle" type="button" aria-label="Abrir men\u00fa" aria-controls="site-nav" aria-expanded="false">' +
       '<span></span><span></span><span></span>' +
       '</button>' +
       '<nav id="site-nav" class="top-links-nav" aria-label="Principal">' +
       '<ul>' + links + '</ul>' +
-      '<a class="btn btn-primary nav-cta" href="quote.html">Solicitar Cotización</a>' +
+      '<a class="btn btn-primary nav-cta" href="quote.html">Solicitar Cotizaci\u00f3n</a>' +
       '</nav>' +
       '</div>';
 
@@ -47,16 +49,16 @@
       '<div class="container footer-inner">' +
       '<div class="footer-links">' +
       '<a class="footer-link" href="about.html">Nosotros</a>' +
-      '<a class="footer-link" href="designs.html">Diseños</a>' +
+      '<a class="footer-link" href="designs.html">Dise\u00f1os</a>' +
       '<a class="footer-link" href="pricing.html">Precios</a>' +
-      '<a class="footer-link" href="contact.html">Contáctenos</a>' +
+      '<a class="footer-link" href="contact.html">Cont\u00e1ctenos</a>' +
       '<a class="footer-link" href="quote.html">Cotizar Ahora</a>' +
       '</div>' +
       '<div class="footer-social">' +
       '<a class="footer-icon" href="https://www.facebook.com/share/1GQxtdCVWr/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">Facebook</a>' +
       '<a class="footer-icon" href="https://wa.me/17874464469" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">WhatsApp</a>' +
       '</div>' +
-      '<p>© 2026 Ebanistería CAD. Todos los derechos reservados.</p>' +
+      '<p>\u00a9 2026 Ebanister\u00eda CAD. Todos los derechos reservados.</p>' +
       '</div>';
   }
 
