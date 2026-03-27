@@ -7,6 +7,68 @@
   },
   "hosting": {
     "public": ".",
+    "redirects": [
+      {
+        "source": "/admin",
+        "destination": "/admin.html",
+        "type": 301
+      },
+      {
+        "source": "/admin/requests",
+        "destination": "/admin-requests.html",
+        "type": 301
+      },
+      {
+        "source": "/admin/designs",
+        "destination": "/admin-designs.html",
+        "type": 301
+      },
+      {
+        "source": "/admin/projects",
+        "destination": "/admin-projects.html",
+        "type": 301
+      },
+      {
+        "source": "/admin/testimonials",
+        "destination": "/admin-testimonials.html",
+        "type": 301
+      },
+      {
+        "source": "/admin/pricing",
+        "destination": "/admin-pricing.html",
+        "type": 301
+      },
+      {
+        "source": "/admin/settings",
+        "destination": "/admin-settings.html",
+        "type": 301
+      },
+      {
+        "source": "/about",
+        "destination": "/about.html",
+        "type": 301
+      },
+      {
+        "source": "/designs",
+        "destination": "/designs.html",
+        "type": 301
+      },
+      {
+        "source": "/pricing",
+        "destination": "/pricing.html",
+        "type": 301
+      },
+      {
+        "source": "/contact",
+        "destination": "/contact.html",
+        "type": 301
+      },
+      {
+        "source": "/quote",
+        "destination": "/quote.html",
+        "type": 301
+      }
+    ],
     "ignore": [
       "firebase.json",
       ".firebaserc",
