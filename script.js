@@ -396,23 +396,55 @@
   }
 
   function applyMaintenanceSettings(settings) {
-    var banner = document.getElementById('siteMaintenanceBanner');
-    if (banner) {
-      banner.remove();
+    var body = document.body;
+    var header = document.querySelector('.site-topbar');
+    var main = document.querySelector('main');
+    var footer = document.querySelector('.site-footer');
+    var maintenanceShell = document.getElementById('siteMaintenanceShell');
+    var business = settings.business || getDefaultSiteSettings().business;
+
+    if (maintenanceShell) {
+      maintenanceShell.remove();
     }
 
-    if (!settings.operations.maintenanceMode) {
+    body.classList.remove('site-maintenance-mode');
+
+    if (!settings.operations.maintenanceMode || !header) {
       return;
     }
 
-    var header = document.querySelector('.site-topbar');
-    if (!header || !header.parentNode) return;
+    body.classList.add('site-maintenance-mode');
 
-    var nextBanner = document.createElement('div');
-    nextBanner.id = 'siteMaintenanceBanner';
-    nextBanner.className = 'form-status info site-maintenance-banner';
-    nextBanner.textContent = settings.operations.maintenanceMessage;
-    header.parentNode.insertBefore(nextBanner, header.nextSibling);
+    header.innerHTML =
+      '<div class="container topbar-inner topbar-inner-maintenance">' +
+      '<a class="brand brand-maintenance" href="index.html" aria-label="Inicio ' + business.name + '">' +
+      '<span class="brand-logo-wrap">' +
+      '<img class="brand-logo" src="' + business.logoUrl + '" alt="Logo de ' + business.name + '" />' +
+      '</span>' +
+      '<span class="brand-copy">' +
+      '<strong>' + business.name + '</strong>' +
+      '<small>Mantenimiento</small>' +
+      '</span>' +
+      '</a>' +
+      '</div>';
+
+    maintenanceShell = document.createElement('section');
+    maintenanceShell.id = 'siteMaintenanceShell';
+    maintenanceShell.className = 'site-maintenance-shell';
+    maintenanceShell.innerHTML =
+      '<div class="site-maintenance-card">' +
+      '<div class="site-maintenance-icon" aria-hidden="true">🚧</div>' +
+      '<h1>Mantenimiento en progreso</h1>' +
+      '<p>' + settings.operations.maintenanceMessage + '</p>' +
+      '</div>';
+
+    if (main && main.parentNode) {
+      main.parentNode.insertBefore(maintenanceShell, main);
+    } else if (footer && footer.parentNode) {
+      footer.parentNode.insertBefore(maintenanceShell, footer);
+    } else {
+      header.parentNode.appendChild(maintenanceShell);
+    }
   }
 
   function getQuotePayload() {
