@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ajustes Admin | Ebanistería CAD</title>
+  <meta name="description" content="Ajustes del panel administrativo." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="admin-body">
+  <section id="authShell" class="admin-auth-shell">
+    <div class="card admin-auth-card">
+      <p class="admin-auth-kicker">Firebase Auth</p>
+      <h1>Protege el panel con Google</h1>
+      <p class="admin-auth-copy">Inicia sesión con una cuenta autorizada para entrar al panel administrativo.</p>
+      <div id="authNotice" class="admin-warning admin-auth-warning" hidden></div>
+      <button id="signInBtn" class="btn btn-primary" type="button">Continuar con Google</button>
+      <p id="authStatus" class="form-status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <div id="protectedApp" class="admin-app-shell" hidden>
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <button id="sidebarToggle" class="admin-icon-btn" type="button" aria-label="Abrir menú">
+          <span></span><span></span><span></span>
+        </button>
+        <a class="admin-brand" href="index.html" aria-label="Ir al sitio público">
+          <span class="admin-brand-logo-wrap">
+            <img src="assets/logo.jpg" alt="Logo Ebanistería CAD" class="admin-brand-logo" />
+          </span>
+          <div>
+            <strong>Admin Panel</strong>
+            <small>Ebanistería CAD</small>
+          </div>
+        </a>
+      </div>
+      <div class="admin-topbar-right">
+        <span id="adminNow" class="admin-now">--</span>
+        <span id="adminUserLabel" class="admin-user-label">Invitado</span>
+        <span id="adminUserDot" class="admin-user-dot" aria-hidden="true">A</span>
+        <button id="signOutBtn" class="btn btn-outline admin-signout-btn" type="button" hidden>Salir</button>
+      </div>
+    </header>
+
+    <div class="admin-layout">
+      <aside id="adminSidebar" class="admin-sidebar" aria-label="Navegación de administración">
+        <nav>
+          <a href="admin.html" class="admin-nav-link">Resumen</a>
+          <a href="admin-requests.html" class="admin-nav-link">Solicitudes (Cotizaciones)</a>
+          <a href="admin-designs.html" class="admin-nav-link">Diseños / Galería</a>
+          <a href="admin-projects.html" class="admin-nav-link">Proyectos Recientes</a>
+          <a href="admin-testimonials.html" class="admin-nav-link">Testimonios</a>
+          <a href="admin-pricing.html" class="admin-nav-link">Precios</a>
+          <a href="admin-settings.html" class="admin-nav-link">Ajustes</a>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <section class="admin-section">
+          <h1 class="section-title">Ajustes</h1>
+          <p class="section-subtitle">Centraliza la información del negocio, redes, homepage, cotizaciones y acceso administrativo.</p>
+
+          <form id="siteSettingsForm" class="admin-content-card">
+            <div class="card">
+              <h3>Negocio y Branding</h3>
+              <div class="grid grid-2">
+                <div>
+                  <label for="settingsBusinessName">Nombre del negocio</label>
+                  <input id="settingsBusinessName" type="text" />
+                </div>
+                <div>
+                  <label for="settingsLogoUrl">Logo público (ruta o URL)</label>
+                  <input id="settingsLogoUrl" type="text" placeholder="assets/logo.jpg" />
+                </div>
+                <div class="form-span-2">
+                  <label for="settingsFooterCopyright">Texto del footer</label>
+                  <input id="settingsFooterCopyright" type="text" />
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Contacto</h3>
+              <div class="grid grid-2">
+                <div>
+                  <label for="settingsPhoneDisplay">Teléfono visible</label>
+                  <input id="settingsPhoneDisplay" type="text" />
+                </div>
+                <div>
+                  <label for="settingsPhoneE164">Teléfono E.164</label>
+                  <input id="settingsPhoneE164" type="text" placeholder="+17874310110" />
+                </div>
+                <div>
+                  <label for="settingsWhatsappNumber">Número de WhatsApp</label>
+                  <input id="settingsWhatsappNumber" type="text" placeholder="17874310110" />
+                </div>
+                <div>
+                  <label for="settingsEmail">Email</label>
+                  <input id="settingsEmail" type="email" />
+                </div>
+                <div class="form-span-2">
+                  <label for="settingsAddress">Dirección pública</label>
+                  <input id="settingsAddress" type="text" />
+                </div>
+                <div>
+                  <label for="settingsMapsLink">Google Maps link</label>
+                  <input id="settingsMapsLink" type="url" />
+                </div>
+                <div>
+                  <label for="settingsMapsEmbedQuery">Texto para mapa embebido</label>
+                  <input id="settingsMapsEmbedQuery" type="text" />
+                </div>
+                <div>
+                  <label for="settingsServiceArea">Área de servicio</label>
+                  <input id="settingsServiceArea" type="text" />
+                </div>
+                <div>
+                  <label for="settingsHoursWeekdays">Horario semana</label>
+                  <input id="settingsHoursWeekdays" type="text" />
+                </div>
+                <div>
+                  <label for="settingsHoursWeekends">Horario fin de semana</label>
+                  <input id="settingsHoursWeekends" type="text" />
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Redes Sociales</h3>
+              <div class="grid grid-2">
+                <div>
+                  <label for="settingsFacebookUrl">Facebook</label>
+                  <input id="settingsFacebookUrl" type="url" />
+                </div>
+                <div>
+                  <label for="settingsInstagramUrl">Instagram</label>
+                  <input id="settingsInstagramUrl" type="url" />
+                </div>
+                <div>
+                  <label for="settingsTiktokUrl">TikTok</label>
+                  <input id="settingsTiktokUrl" type="url" />
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Homepage</h3>
+              <div class="grid grid-2">
+                <label class="admin-check-row"><input id="settingsShowRecentProjects" type="checkbox" /> Mostrar Proyectos Recientes</label>
+                <label class="admin-check-row"><input id="settingsShowTestimonials" type="checkbox" /> Mostrar Testimonios</label>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Cotizaciones</h3>
+              <div class="grid grid-2">
+                <div>
+                  <label for="settingsQuoteMaxImages">Máximo de fotos</label>
+                  <input id="settingsQuoteMaxImages" type="number" min="1" max="20" />
+                </div>
+                <div class="form-span-2">
+                  <label for="settingsQuoteCategories">Categorías disponibles (una por línea)</label>
+                  <textarea id="settingsQuoteCategories" rows="6"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Acceso Administrativo</h3>
+              <div class="grid">
+                <div>
+                  <label for="settingsAllowedAdminEmails">Correos admin (uno por línea)</label>
+                  <textarea id="settingsAllowedAdminEmails" rows="5"></textarea>
+                  <p class="field-help">Estos correos controlan el acceso al panel y las reglas admin de Firestore.</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <h3>Operación</h3>
+              <div class="grid grid-2">
+                <label class="admin-check-row"><input id="settingsMaintenanceMode" type="checkbox" /> Activar modo mantenimiento</label>
+                <label class="admin-check-row"><input id="settingsNotificationsEnabled" type="checkbox" /> Activar preferencia de notificaciones</label>
+                <div class="form-span-2">
+                  <label for="settingsMaintenanceMessage">Mensaje de mantenimiento</label>
+                  <textarea id="settingsMaintenanceMessage" rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-inline-actions">
+              <button class="btn btn-primary" type="submit">Guardar ajustes</button>
+              <button id="settingsResetBtn" class="btn btn-outline" type="button">Restablecer formulario</button>
+              <button id="settingsExportBtn" class="btn btn-outline" type="button">Exportar JSON</button>
+              <p id="settingsFormStatus" class="form-status" role="status" aria-live="polite"></p>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="admin-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js?v=20260326s"></script>
+  <script src="firebase-auth.js?v=20260326s"></script>
+  <script src="quote-service.js?v=20260326s"></script>
+  <script src="content-service.js?v=20260326s"></script>
+  <script src="admin.js?v=20260326s"></script>
+  <script src="admin-content.js?v=20260326s"></script>
+</body>
+</html>

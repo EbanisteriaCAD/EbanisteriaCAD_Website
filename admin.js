@@ -1,48 +1,7 @@
-﻿(function () {
-  var STORAGE_KEY = 'ebanisteria_quotes';
+(function () {
   var SIDEBAR_OPEN_CLASS = 'admin-sidebar-open';
-
-  var SAMPLE_QUOTES = [
-    {
-      id: 'REQ-1001',
-      name: 'María Torres',
-      phone: '787-555-0101',
-      email: 'maria.torres@email.com',
-      category: 'Cocinas',
-      message: 'Quiero una cocina moderna en L con isla.',
-      status: 'new',
-      createdAt: '2026-03-01T10:12:00',
-      measures: '12x10 pies',
-      material: 'PVC + cuarzo',
-      budget: '$6,000 - $8,000'
-    },
-    {
-      id: 'REQ-1002',
-      name: 'Carlos Rivera',
-      phone: '787-555-0198',
-      email: 'carlos.rivera@email.com',
-      category: 'Closets',
-      message: 'Necesito closet empotrado con módulos y gavetas.',
-      status: 'in_progress',
-      createdAt: '2026-03-02T14:40:00',
-      measures: '8x6 pies',
-      material: 'Melamina premium',
-      budget: '$3,000 - $4,500'
-    },
-    {
-      id: 'REQ-1003',
-      name: 'Laura Méndez',
-      phone: '787-555-0137',
-      email: 'laura.mendez@email.com',
-      category: 'Remodelación',
-      message: 'Proyecto integral de cocina y mueble de TV.',
-      status: 'completed',
-      createdAt: '2026-02-25T09:05:00',
-      measures: 'Apartamento completo',
-      material: 'Combinado',
-      budget: '$12,000+'
-    }
-  ];
+  var QuoteService = window.QuoteService;
+  var FirebaseAdminAuth = window.FirebaseAdminAuth;
 
   var STATUS_META = {
     new: { label: 'Nuevo', css: 'status-nuevo' },
@@ -50,119 +9,20 @@
     completed: { label: 'Completado', css: 'status-completado' }
   };
 
-  // Data service abstraction
-  // TODO: Replace localStorage with Firebase Firestore queries
-  var QuoteService = {
-    getQuotes: getQuotes,
-    saveQuote: saveQuote,
-    updateQuoteStatus: updateQuoteStatus,
-    deleteQuote: deleteQuote
-  };
-
   var state = {
     search: '',
     statusFilter: 'Todos',
-    loading: false
+    loading: false,
+    authReady: false,
+    currentUser: null,
+    clockTimer: null,
+    uiReady: false,
+    quotes: [],
+    quotesUnsubscribe: null
   };
 
   function byId(id) {
     return document.getElementById(id);
-  }
-
-  function notifyQuotesUpdated() {
-    document.dispatchEvent(new CustomEvent('quotesUpdated'));
-  }
-
-  function readStore() {
-    var raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-
-    try {
-      var parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function writeStore(quotes, emitEvent) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(quotes));
-    if (emitEvent !== false) {
-      notifyQuotesUpdated();
-    }
-  }
-
-  function generateId() {
-    return 'REQ-' + Date.now().toString(36).toUpperCase();
-  }
-
-  function normalizeQuote(input) {
-    return {
-      id: input.id || generateId(),
-      name: input.name || '',
-      phone: input.phone || '',
-      email: input.email || '',
-      category: input.category || '',
-      message: input.message || '',
-      status: input.status || 'new',
-      createdAt: input.createdAt || new Date().toISOString(),
-      measures: input.measures || '',
-      material: input.material || '',
-      budget: input.budget || ''
-    };
-  }
-
-  function getQuotes() {
-    return readStore();
-  }
-
-  function saveQuote(quote) {
-    var quotes = readStore();
-    var normalized = normalizeQuote(quote || {});
-    quotes.push(normalized);
-    writeStore(quotes);
-    return normalized;
-  }
-
-  function updateQuoteStatus(id, status) {
-    var quotes = readStore();
-    var updated = false;
-
-    quotes = quotes.map(function (q) {
-      if (q.id !== id) return q;
-      updated = true;
-      return Object.assign({}, q, { status: status });
-    });
-
-    if (updated) {
-      writeStore(quotes);
-    }
-
-    return updated;
-  }
-
-  function deleteQuote(id) {
-    var quotes = readStore();
-    var next = quotes.filter(function (q) { return q.id !== id; });
-
-    if (next.length !== quotes.length) {
-      writeStore(next);
-      return true;
-    }
-
-    return false;
-  }
-
-  function seedDemoDataIfNeeded() {
-    if (QuoteService.getQuotes().length > 0) return;
-
-    SAMPLE_QUOTES.forEach(function (quote) {
-      var quotes = readStore();
-      quotes.push(normalizeQuote(quote));
-      writeStore(quotes, false);
-    });
-
-    notifyQuotesUpdated();
   }
 
   function formatDate(iso) {
@@ -182,13 +42,6 @@
     return String(value || '').toLowerCase();
   }
 
-  function statusToFilterValue(status) {
-    if (status === 'new') return 'Nuevo';
-    if (status === 'in_progress') return 'En Proceso';
-    if (status === 'completed') return 'Completado';
-    return 'Todos';
-  }
-
   function filterValueToStatus(filter) {
     if (filter === 'Nuevo') return 'new';
     if (filter === 'En Proceso') return 'in_progress';
@@ -200,19 +53,27 @@
     var q = normalize(state.search);
     var statusFilter = filterValueToStatus(state.statusFilter);
 
-    return QuoteService.getQuotes().filter(function (item) {
+    return state.quotes.filter(function (item) {
       var statusOk = statusFilter === 'all' || item.status === statusFilter;
       if (!statusOk) return false;
 
       if (!q) return true;
 
-      return [item.name, item.email, item.category, item.phone]
-        .some(function (v) { return normalize(v).indexOf(q) !== -1; });
+      return [item.name, item.email, item.category, item.phone, item.id, item.address, item.addressLine, item.city, item.stateRegion, item.postalCode]
+        .some(function (v) {
+          return normalize(v).indexOf(q) !== -1;
+        });
     });
   }
 
   function calcStats() {
-    var quotes = QuoteService.getQuotes();
+    var statTotal = byId('statTotal');
+    var statWeek = byId('statWeek');
+    var statPending = byId('statPending');
+    var statDone = byId('statDone');
+    if (!statTotal || !statWeek || !statPending || !statDone) return;
+
+    var quotes = state.quotes.slice();
     var total = quotes.length;
     var pending = quotes.filter(function (r) { return r.status === 'new'; }).length;
     var done = quotes.filter(function (r) { return r.status === 'completed'; }).length;
@@ -223,13 +84,13 @@
 
     var week = quotes.filter(function (r) {
       var d = new Date(r.createdAt);
-      return d >= weekAgo && d <= now;
+      return !Number.isNaN(d.getTime()) && d >= weekAgo && d <= now;
     }).length;
 
-    byId('statTotal').textContent = String(total);
-    byId('statWeek').textContent = String(week);
-    byId('statPending').textContent = String(pending);
-    byId('statDone').textContent = String(done);
+    statTotal.textContent = String(total);
+    statWeek.textContent = String(week);
+    statPending.textContent = String(pending);
+    statDone.textContent = String(done);
   }
 
   function escapeHtml(value) {
@@ -273,7 +134,10 @@
     var tbody = byId('requestsTbody');
     var empty = byId('emptyState');
     var tableWrap = byId('tableWrap');
-    if (!tbody || !empty || !tableWrap) return;
+    if (!tbody || !empty || !tableWrap) {
+      calcStats();
+      return;
+    }
 
     var rows = getFilteredQuotes();
 
@@ -332,6 +196,29 @@
     return '<div><dt>' + escapeHtml(label) + '</dt><dd>' + escapeHtml(value) + '</dd></div>';
   }
 
+  function renderAttachments(request) {
+    var attachments = request && Array.isArray(request.attachments) ? request.attachments : [];
+    if (!attachments.length) {
+      return '';
+    }
+
+    return (
+      '<div class="admin-attachments">' +
+      '<h4>Fotos del proyecto</h4>' +
+      '<div class="admin-attachment-grid">' +
+      attachments.map(function (url, index) {
+        var safeUrl = escapeHtml(url);
+        return (
+          '<a class="admin-attachment-link" href="' + safeUrl + '" target="_blank" rel="noopener noreferrer">' +
+          '<img src="' + safeUrl + '" alt="Foto del proyecto ' + String(index + 1) + '" />' +
+          '</a>'
+        );
+      }).join('') +
+      '</div>' +
+      '</div>'
+    );
+  }
+
   function openRequestModal(request) {
     var modal = byId('requestModal');
     var content = byId('modalContent');
@@ -344,15 +231,20 @@
       detail('ID', request.id) +
       detail('Fecha', formatDate(request.createdAt)) +
       detail('Nombre', request.name) +
-      detail('Categoría', request.category) +
-      detail('Teléfono', request.phone) +
+      detail('Categoria', request.category) +
+      detail('Telefono', request.phone) +
+      detail('Direccion', request.addressLine || request.address || '-') +
+      detail('Pueblo', request.city || '-') +
+      detail('Estado', request.stateRegion || '-') +
+      detail('Codigo Postal', request.postalCode || '-') +
       detail('Email', request.email) +
       detail('Estado', meta.label) +
       detail('Medidas', request.measures || '-') +
       detail('Material', request.material || '-') +
       detail('Presupuesto', request.budget || '-') +
       detail('Mensaje', request.message || '-') +
-      '</dl>';
+      '</dl>' +
+      renderAttachments(request);
 
     modal.hidden = false;
     document.body.classList.add('admin-modal-open');
@@ -365,11 +257,161 @@
     document.body.classList.remove('admin-modal-open');
   }
 
-  function findQuote(id) {
-    return QuoteService.getQuotes().find(function (r) { return r.id === id; });
+  function renderPreview(containerId, files) {
+    var preview = byId(containerId);
+    if (!preview) return;
+
+    var list = Array.prototype.slice.call(files || []);
+    if (!list.length) {
+      preview.hidden = true;
+      preview.innerHTML = '';
+      return;
+    }
+
+    preview.hidden = false;
+    preview.innerHTML = list.map(function (file) {
+      var url = URL.createObjectURL(file);
+      return (
+        '<div class="quote-image-preview-item">' +
+        '<img src="' + url + '" alt="Vista previa" />' +
+        '<span>' + escapeHtml(file.name) + '</span>' +
+        '</div>'
+      );
+    }).join('');
   }
 
-  function handleActionClick(e) {
+  function formatBudgetValue(value) {
+    var digits = String(value || '').replace(/[^\d]/g, '');
+    if (!digits) return '';
+    return '$' + Number(digits).toLocaleString('en-US');
+  }
+
+  function bindBudgetFormatter(inputId) {
+    var budgetInput = byId(inputId);
+    if (!budgetInput) return;
+
+    function applyFormat() {
+      budgetInput.value = formatBudgetValue(budgetInput.value);
+    }
+
+    budgetInput.addEventListener('input', applyFormat);
+    budgetInput.addEventListener('blur', applyFormat);
+  }
+
+  function resetManualQuoteForm() {
+    var form = byId('manualQuoteForm');
+    var card = byId('manualQuoteCard');
+    var imagesInput = byId('manualQuoteImages');
+    if (form) form.reset();
+    if (imagesInput) imagesInput.value = '';
+    renderPreview('manualQuoteImagesPreview', []);
+    var statusEl = byId('manualQuoteStatusMessage');
+    if (statusEl) {
+      statusEl.className = 'form-status';
+      statusEl.textContent = '';
+    }
+    if (card) {
+      card.hidden = true;
+    }
+  }
+
+  function openManualQuoteForm() {
+    var card = byId('manualQuoteCard');
+    if (!card) return;
+    card.hidden = false;
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function setManualQuoteStatus(type, message) {
+    var el = byId('manualQuoteStatusMessage');
+    if (!el) return;
+    el.className = 'form-status';
+    if (!message) {
+      el.textContent = '';
+      return;
+    }
+    if (type) el.classList.add(type);
+    el.textContent = message;
+  }
+
+  function getManualQuotePayload() {
+    return {
+      name: (byId('manualQuoteName') || {}).value || '',
+      phone: (byId('manualQuotePhone') || {}).value || '',
+      addressLine: (byId('manualQuoteAddressLine') || {}).value || '',
+      city: (byId('manualQuoteCity') || {}).value || '',
+      stateRegion: (byId('manualQuoteStateRegion') || {}).value || '',
+      postalCode: (byId('manualQuotePostalCode') || {}).value || '',
+      email: (byId('manualQuoteEmail') || {}).value || '',
+      category: (byId('manualQuoteCategory') || {}).value || '',
+      measures: (byId('manualQuoteMeasures') || {}).value || '',
+      material: (byId('manualQuoteMaterial') || {}).value || '',
+      budget: (byId('manualQuoteBudget') || {}).value || '',
+      message: (byId('manualQuoteMessage') || {}).value || '',
+      status: (byId('manualQuoteStatus') || {}).value || 'new',
+      source: 'admin_manual'
+    };
+  }
+
+  function wireManualQuoteForm() {
+    var form = byId('manualQuoteForm');
+    var toggleBtn = byId('toggleManualQuoteBtn');
+    var cancelBtn = byId('cancelManualQuoteBtn');
+    var emptyBtn = byId('openManualQuoteEmptyBtn');
+    var imagesInput = byId('manualQuoteImages');
+    if (!form) return;
+
+    bindBudgetFormatter('manualQuoteBudget');
+
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', openManualQuoteForm);
+    }
+
+    if (emptyBtn) {
+      emptyBtn.addEventListener('click', openManualQuoteForm);
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', resetManualQuoteForm);
+    }
+
+    if (imagesInput) {
+      imagesInput.addEventListener('change', function () {
+        renderPreview('manualQuoteImagesPreview', imagesInput.files);
+      });
+    }
+
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      var files = imagesInput ? Array.prototype.slice.call(imagesInput.files || []) : [];
+
+      var maxImages = 10;
+      if (window.SiteSettingsState && window.SiteSettingsState.quoteForm && window.SiteSettingsState.quoteForm.maxImages) {
+        maxImages = Number(window.SiteSettingsState.quoteForm.maxImages) || 10;
+      }
+
+      if (files.length > maxImages) {
+        setManualQuoteStatus('error', 'Puedes subir hasta ' + String(maxImages) + ' fotos por cotizacion manual.');
+        return;
+      }
+
+      try {
+        await QuoteService.saveQuote(getManualQuotePayload(), files);
+        setManualQuoteStatus('success', 'Cotizacion manual creada correctamente.');
+        showToast('success', 'La cotizacion manual ya aparece en solicitudes.');
+        resetManualQuoteForm();
+      } catch (error) {
+        console.error('Manual quote creation failed:', error);
+        setManualQuoteStatus('error', 'No se pudo crear la cotizacion manual.');
+      }
+    });
+  }
+
+  function findQuote(id) {
+    return state.quotes.find(function (r) { return r.id === id; }) || null;
+  }
+
+  async function handleActionClick(e) {
     var target = e.target;
     if (!(target instanceof HTMLElement)) return;
 
@@ -382,24 +424,34 @@
       return;
     }
 
-    if (action === 'process') {
-      var okProcess = QuoteService.updateQuoteStatus(id, 'in_progress');
-      if (okProcess) showToast('success', 'Estado actualizado a En Proceso.');
+    if (!QuoteService) {
+      showToast('error', 'QuoteService no esta disponible.');
       return;
     }
 
-    if (action === 'done') {
-      var okDone = QuoteService.updateQuoteStatus(id, 'completed');
-      if (okDone) showToast('success', 'Solicitud marcada como completada.');
-      return;
-    }
+    try {
+      if (action === 'process') {
+        await QuoteService.updateQuoteStatus(id, 'in_progress');
+        showToast('success', 'Estado actualizado a En Proceso.');
+        return;
+      }
 
-    if (action === 'delete') {
-      var req = findQuote(id);
-      if (!req) return;
-      if (!window.confirm('¿Eliminar la solicitud de ' + req.name + '?')) return;
-      var removed = QuoteService.deleteQuote(id);
-      if (removed) showToast('info', 'Solicitud eliminada.');
+      if (action === 'done') {
+        await QuoteService.updateQuoteStatus(id, 'completed');
+        showToast('success', 'Solicitud marcada como completada.');
+        return;
+      }
+
+      if (action === 'delete') {
+        var req = findQuote(id);
+        if (!req) return;
+        if (!window.confirm('Eliminar la solicitud de ' + req.name + '?')) return;
+        await QuoteService.deleteQuote(id);
+        closeModal();
+        showToast('info', 'Solicitud eliminada.');
+      }
+    } catch (error) {
+      showToast('error', 'No se pudo actualizar la solicitud.');
     }
   }
 
@@ -475,57 +527,287 @@
     });
   }
 
-  function wireSectionSpy() {
-    var links = Array.prototype.slice.call(document.querySelectorAll('.admin-nav-link'));
-    var sections = links
-      .map(function (link) {
-        var id = link.getAttribute('href') || '';
-        return document.querySelector(id);
-      })
-      .filter(Boolean);
+  function wireActiveNav() {
+    var current = (window.location.pathname.split('/').pop() || 'admin.html').toLowerCase();
+    document.querySelectorAll('.admin-nav-link').forEach(function (link) {
+      var href = String(link.getAttribute('href') || '').toLowerCase();
+      link.classList.toggle('active', href === current);
+    });
+  }
 
-    if (!sections.length) return;
+  function getUserInitial(user) {
+    var source = (user && (user.displayName || user.email || user.uid)) || 'A';
+    return String(source).trim().charAt(0).toUpperCase() || 'A';
+  }
 
-    function updateActive() {
-      var y = window.scrollY + 120;
-      var current = sections[0].id;
+  function updateIdentity(user) {
+    var label = byId('adminUserLabel');
+    var dot = byId('adminUserDot');
 
-      sections.forEach(function (s) {
-        if (s.offsetTop <= y) current = s.id;
-      });
-
-      links.forEach(function (link) {
-        link.classList.toggle('active', link.getAttribute('href') === '#' + current);
-      });
+    if (label) {
+      label.textContent = user ? (user.displayName || user.email || 'Usuario') : 'Invitado';
     }
 
-    updateActive();
-    window.addEventListener('scroll', updateActive, { passive: true });
+    if (dot) {
+      dot.textContent = user ? getUserInitial(user) : 'A';
+      dot.title = user ? (user.email || user.displayName || 'Usuario autenticado') : 'Sin sesion';
+    }
   }
 
-  function refreshFromService() {
-    if (state.loading) return;
-    renderTable();
+  function setAuthStatus(message, type) {
+    var el = byId('authStatus');
+    if (!el) return;
+
+    el.className = 'form-status';
+    if (!message) {
+      el.textContent = '';
+      return;
+    }
+
+    if (type) {
+      el.classList.add(type);
+    }
+
+    el.textContent = message;
   }
 
-  function init() {
+  function setAuthNotice(messages) {
+    var el = byId('authNotice');
+    if (!el) return;
+
+    if (!messages || !messages.length) {
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+
+    el.hidden = false;
+    el.textContent = messages.join(' ');
+  }
+
+  function setSignInEnabled(enabled) {
+    var btn = byId('signInBtn');
+    if (btn) {
+      btn.disabled = !enabled;
+    }
+  }
+
+  function setSignOutVisible(visible) {
+    var btn = byId('signOutBtn');
+    if (btn) {
+      btn.hidden = !visible;
+    }
+  }
+
+  function showAuthShell() {
+    var authShell = byId('authShell');
+    var protectedApp = byId('protectedApp');
+
+    document.body.classList.add('admin-auth-active');
+
+    if (authShell) {
+      authShell.hidden = false;
+    }
+
+    if (protectedApp) {
+      protectedApp.hidden = true;
+    }
+  }
+
+  function showProtectedApp() {
+    var authShell = byId('authShell');
+    var protectedApp = byId('protectedApp');
+
+    document.body.classList.remove('admin-auth-active');
+
+    if (authShell) {
+      authShell.hidden = true;
+    }
+
+    if (protectedApp) {
+      protectedApp.hidden = false;
+    }
+  }
+
+  function stopQuoteSubscription() {
+    if (typeof state.quotesUnsubscribe === 'function') {
+      state.quotesUnsubscribe();
+      state.quotesUnsubscribe = null;
+    }
+  }
+
+  function startQuoteSubscription() {
+    if (!QuoteService || typeof QuoteService.subscribeQuotes !== 'function') {
+      setLoading(false);
+      showToast('error', 'No se pudo conectar con Firestore.');
+      return;
+    }
+
+    stopQuoteSubscription();
     setLoading(true);
 
-    seedDemoDataIfNeeded();
-
-    setTimeout(function () {
+    state.quotesUnsubscribe = QuoteService.subscribeQuotes(function (quotes) {
+      state.quotes = Array.isArray(quotes) ? quotes : [];
       setLoading(false);
+      renderTable();
+    }, function () {
+      setLoading(false);
+      showToast('error', 'No se pudieron cargar las solicitudes desde Firestore.');
+    });
+  }
+
+  function bootDashboard() {
+    if (!QuoteService) {
+      setAuthStatus('QuoteService no esta disponible. Verifica que quote-service.js cargue antes que admin.js.', 'error');
+      return;
+    }
+
+    if (!state.uiReady) {
       wireSidebar();
       wireFilters();
       wireTableActions();
       wireModal();
-      wireSectionSpy();
-      document.addEventListener('quotesUpdated', refreshFromService);
-      renderTable();
+      wireManualQuoteForm();
+      wireActiveNav();
       updateNowClock();
-      setInterval(updateNowClock, 30000);
-      showToast('info', 'Panel listo. Puedes gestionar solicitudes localmente.');
-    }, 320);
+      if (!state.clockTimer) {
+        state.clockTimer = setInterval(updateNowClock, 30000);
+      }
+      state.uiReady = true;
+    }
+
+    startQuoteSubscription();
+  }
+
+  function explainAuthError(error) {
+    var code = error && error.code ? String(error.code) : '';
+
+    if (code === 'auth/popup-blocked') return 'El navegador bloqueo la ventana emergente de Google. Intenta de nuevo.';
+    if (code === 'auth/popup-closed-by-user') return 'Cancelaste el inicio de sesion.';
+    if (code === 'auth/unauthorized-domain') return 'Este dominio no esta autorizado en Firebase. Agregalo en Authentication > Settings.';
+    if (code === 'auth/network-request-failed') return 'No se pudo conectar con Firebase. Revisa tu red y vuelve a intentar.';
+    if (code === 'auth/operation-not-allowed') return 'Google Sign-In no esta habilitado en Firebase Authentication.';
+
+    return (error && error.message) ? error.message : 'No se pudo completar el inicio de sesion.';
+  }
+
+  function handleAuthStateChange(user, bridgeState) {
+    state.authReady = !!(bridgeState && bridgeState.ready);
+    var deniedMessage = FirebaseAdminAuth && typeof FirebaseAdminAuth.getAccessDeniedMessage === 'function'
+      ? FirebaseAdminAuth.getAccessDeniedMessage()
+      : '';
+
+    if (bridgeState && bridgeState.issues && bridgeState.issues.length) {
+      setAuthNotice(bridgeState.issues);
+      setAuthStatus('Configura Firebase para desbloquear el acceso con Google.', 'error');
+      setSignInEnabled(false);
+    } else {
+      setAuthNotice([]);
+      setSignInEnabled(true);
+    }
+
+    if (user) {
+      state.currentUser = user;
+      updateIdentity(user);
+      setSignOutVisible(true);
+      setAuthStatus('', null);
+      showProtectedApp();
+      bootDashboard();
+      return;
+    }
+
+    state.currentUser = null;
+    state.quotes = [];
+    stopQuoteSubscription();
+    updateIdentity(null);
+    setSignOutVisible(false);
+    showAuthShell();
+
+    if (deniedMessage) {
+      setAuthStatus(deniedMessage, 'error');
+      setSignInEnabled(true);
+      return;
+    }
+
+    if (state.authReady) {
+      setAuthStatus('Inicia sesion con Google para entrar al panel.', 'info');
+      setSignInEnabled(true);
+    }
+  }
+
+  function wireAuthControls() {
+    var signInBtn = byId('signInBtn');
+    var signOutBtn = byId('signOutBtn');
+
+    if (signInBtn) {
+      signInBtn.addEventListener('click', function () {
+        if (!FirebaseAdminAuth || typeof FirebaseAdminAuth.signInWithGoogle !== 'function') {
+          setAuthStatus('Firebase Auth no esta listo todavia.', 'error');
+          return;
+        }
+
+        setAuthStatus('Abriendo el inicio de sesion de Google...', 'info');
+
+        FirebaseAdminAuth.signInWithGoogle().catch(function (error) {
+          var message = explainAuthError(error);
+          setAuthStatus(message, 'error');
+          setSignInEnabled(true);
+          showToast('error', message);
+        });
+      });
+    }
+
+    if (signOutBtn) {
+      signOutBtn.addEventListener('click', function () {
+        if (!FirebaseAdminAuth || typeof FirebaseAdminAuth.signOut !== 'function') {
+          return;
+        }
+
+        setAuthStatus('Cerrando la sesion...', 'info');
+        setSignOutVisible(false);
+        stopQuoteSubscription();
+
+        FirebaseAdminAuth.signOut().catch(function (error) {
+          var message = explainAuthError(error);
+          setAuthStatus(message, 'error');
+          setSignOutVisible(true);
+          showToast('error', message);
+        });
+      });
+    }
+  }
+
+  function initAuth() {
+    var bridge = FirebaseAdminAuth;
+
+    if (!bridge || typeof bridge.onAuthStateChanged !== 'function') {
+      setAuthNotice(['Firebase Auth no esta cargado. Verifica que los scripts de Firebase esten incluidos antes de admin.js.']);
+      setAuthStatus('No se pudo cargar la proteccion del panel.', 'error');
+      setSignInEnabled(false);
+      setSignOutVisible(false);
+      showAuthShell();
+      return;
+    }
+
+    if (typeof bridge.init === 'function') {
+      bridge.init();
+    }
+
+    setAuthNotice(bridge.getIssues ? bridge.getIssues() : []);
+    setSignOutVisible(false);
+    showAuthShell();
+
+    bridge.onAuthStateChanged(handleAuthStateChange);
+  }
+
+  function init() {
+    if (!QuoteService) {
+      console.error('QuoteService no esta disponible. Verifica que quote-service.js cargue antes de admin.js.');
+      return;
+    }
+
+    wireAuthControls();
+    initAuth();
   }
 
   init();

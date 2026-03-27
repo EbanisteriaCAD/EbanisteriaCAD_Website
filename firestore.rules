@@ -1,0 +1,140 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function adminEmails() {
+      return exists(/databases/$(database)/documents/siteSettings/public)
+        && get(/databases/$(database)/documents/siteSettings/public).data.admin.allowedAdminEmails is list
+        ? get(/databases/$(database)/documents/siteSettings/public).data.admin.allowedAdminEmails
+        : [
+            'burgosaxel56@gmail.com'
+          ];
+    }
+
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email in adminEmails();
+    }
+
+    function isNonEmptyString(value, max) {
+      return value is string
+        && value.size() > 0
+        && value.size() <= max;
+    }
+
+    function hasOnlyKeys(data, allowed) {
+      return data.keys().hasOnly(allowed);
+    }
+
+    function validQuotePayload(data, quoteId) {
+      return hasOnlyKeys(data, [
+          'id',
+          'name',
+          'phone',
+          'addressLine',
+          'city',
+          'stateRegion',
+          'postalCode',
+          'address',
+          'email',
+          'category',
+          'message',
+          'status',
+          'createdAt',
+          'measures',
+          'material',
+          'budget',
+          'source',
+          'attachments'
+        ])
+        && data.id == quoteId
+        && isNonEmptyString(data.name, 120)
+        && isNonEmptyString(data.phone, 40)
+        && isNonEmptyString(data.addressLine, 240)
+        && isNonEmptyString(data.city, 120)
+        && isNonEmptyString(data.stateRegion, 32)
+        && isNonEmptyString(data.postalCode, 20)
+        && isNonEmptyString(data.address, 320)
+        && isNonEmptyString(data.email, 160)
+        && isNonEmptyString(data.category, 80)
+        && isNonEmptyString(data.message, 4000)
+        && data.attachments is list
+        && data.attachments.size() <= (
+          exists(/databases/$(database)/documents/siteSettings/public)
+          && get(/databases/$(database)/documents/siteSettings/public).data.quoteForm.maxImages is int
+            ? get(/databases/$(database)/documents/siteSettings/public).data.quoteForm.maxImages
+            : 10
+        )
+        && data.createdAt is string;
+    }
+
+    match /quoteRequests/{quoteId} {
+      allow create: if (validQuotePayload(request.resource.data, quoteId)
+        && request.resource.data.status == 'new'
+        && request.resource.data.source == 'website'
+      ) || (
+        isAdmin()
+        && validQuotePayload(request.resource.data, quoteId)
+      );
+
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /mail/{mailId} {
+      allow create: if hasOnlyKeys(request.resource.data, [
+          'to',
+          'message',
+          'quoteId',
+          'createdAt',
+          'type'
+        ])
+        && request.resource.data.type == 'quote_receipt'
+        && request.resource.data.createdAt is string
+        && request.resource.data.quoteId is string
+        && request.resource.data.to is list
+        && request.resource.data.to.size() == 1
+        && request.resource.data.to[0] is string
+        && request.resource.data.message is map
+        && request.resource.data.message.subject is string
+        && request.resource.data.message.text is string
+        && request.resource.data.message.html is string;
+
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /designCategories/{categoryId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.id == categoryId;
+      allow delete: if isAdmin();
+    }
+
+    match /pricingCards/{cardId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.id == cardId;
+      allow delete: if isAdmin();
+    }
+
+    match /recentProjects/{projectId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.id == projectId;
+      allow delete: if isAdmin();
+    }
+
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.id == testimonialId;
+      allow delete: if isAdmin();
+    }
+
+    match /siteSettings/{settingsId} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.id == settingsId;
+      allow delete: if false;
+    }
+  }
+}

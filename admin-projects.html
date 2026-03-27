@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Resumen Admin | Ebanistería CAD</title>
-  <meta name="description" content="Resumen administrativo de Ebanistería CAD." />
+  <title>Proyectos Recientes Admin | Ebanistería CAD</title>
+  <meta name="description" content="Gestión de proyectos recientes para la homepage." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="admin-body">
@@ -58,59 +58,63 @@
 
       <main class="admin-main">
         <section class="admin-section">
-          <h1 class="section-title">Resumen</h1>
-          <p class="section-subtitle">Vista rápida del panel y accesos directos a cada área administrativa.</p>
+          <h1 class="section-title">Proyectos Recientes</h1>
+          <div class="card admin-content-card">
+            <div class="admin-section-head">
+              <div>
+                <h3>Administra los 3 proyectos visibles en la homepage</h3>
+                <p>Actualiza el título, descripción y galería de cada tarjeta publicada.</p>
+              </div>
+              <div class="admin-inline-actions">
+                <button id="openRecentProjectEditorBtn" class="btn btn-primary" type="button">Añadir proyecto reciente</button>
+              </div>
+            </div>
 
-          <div class="grid grid-4 admin-stats">
-            <article class="card admin-stat-card">
-              <span>Total Solicitudes</span>
-              <strong id="statTotal">0</strong>
-            </article>
-            <article class="card admin-stat-card">
-              <span>Esta Semana</span>
-              <strong id="statWeek">0</strong>
-            </article>
-            <article class="card admin-stat-card">
-              <span>Pendientes</span>
-              <strong id="statPending">0</strong>
-            </article>
-            <article class="card admin-stat-card">
-              <span>Completadas</span>
-              <strong id="statDone">0</strong>
-            </article>
-          </div>
+            <form id="recentProjectForm" class="admin-content-form" hidden>
+              <div class="grid grid-2">
+                <div>
+                  <label for="recentProjectTitle">Título del proyecto</label>
+                  <input id="recentProjectTitle" type="text" placeholder="Ej. Cocina Moderna" required />
+                </div>
+                <div>
+                  <label for="recentProjectCoverIndex">Foto principal</label>
+                  <select id="recentProjectCoverIndex">
+                    <option value="0">Primera foto subida</option>
+                  </select>
+                </div>
+              </div>
 
-          <div class="grid grid-2" style="margin-top: 1.25rem;">
-            <article class="card">
-              <h3>Solicitudes</h3>
-              <p class="section-subtitle">Revisa cotizaciones, crea solicitudes manuales y actualiza estados.</p>
-              <a class="btn btn-primary" href="admin-requests.html">Abrir Solicitudes</a>
-            </article>
-            <article class="card">
-              <h3>Diseños / Galería</h3>
-              <p class="section-subtitle">Administra categorías, portadas, fotos y orden público de la galería.</p>
-              <a class="btn btn-primary" href="admin-designs.html">Abrir Diseños</a>
-            </article>
-            <article class="card">
-              <h3>Proyectos Recientes</h3>
-              <p class="section-subtitle">Administra las 3 tarjetas visibles en la homepage y sus galerías.</p>
-              <a class="btn btn-primary" href="admin-projects.html">Abrir Proyectos</a>
-            </article>
-            <article class="card">
-              <h3>Testimonios</h3>
-              <p class="section-subtitle">Gestiona las reseñas en imagen que se muestran en la homepage.</p>
-              <a class="btn btn-primary" href="admin-testimonials.html">Abrir Testimonios</a>
-            </article>
-            <article class="card">
-              <h3>Precios</h3>
-              <p class="section-subtitle">Edita planes, promociones, contenido enriquecido y orden de tarjetas.</p>
-              <a class="btn btn-primary" href="admin-pricing.html">Abrir Precios</a>
-            </article>
-            <article class="card">
-              <h3>Ajustes</h3>
-              <p class="section-subtitle">Área reservada para configuraciones del panel y futuras preferencias.</p>
-              <a class="btn btn-outline" href="admin-settings.html">Abrir Ajustes</a>
-            </article>
+              <div>
+                <label for="recentProjectDescription">Descripción</label>
+                <textarea id="recentProjectDescription" rows="4" placeholder="Describe el proyecto reciente y su propuesta visual." required></textarea>
+              </div>
+
+              <div>
+                <label for="recentProjectImages">Fotos del proyecto</label>
+                <input id="recentProjectImages" type="file" accept="image/*" multiple />
+                <p class="field-help">Puedes subir varias fotos. La portada será la imagen principal de la tarjeta.</p>
+                <div id="recentProjectImagesPreview" class="quote-image-preview" hidden></div>
+              </div>
+
+              <div>
+                <label>Fotos actuales</label>
+                <div id="recentProjectExistingImages" class="admin-existing-images"></div>
+              </div>
+
+              <div class="admin-inline-actions">
+                <button class="btn btn-primary" type="submit">Guardar proyecto</button>
+                <button id="recentProjectResetBtn" class="btn btn-outline" type="button">Cancelar</button>
+                <p id="recentProjectFormStatus" class="form-status" role="status" aria-live="polite"></p>
+              </div>
+            </form>
+
+            <div class="admin-list-block">
+              <div class="admin-list-head">
+                <h3>Proyectos publicados</h3>
+                <p>Se muestran hasta 3 tarjetas en el layout actual de la homepage.</p>
+              </div>
+              <div id="recentProjectsList" class="admin-card-list"></div>
+            </div>
           </div>
         </section>
       </main>

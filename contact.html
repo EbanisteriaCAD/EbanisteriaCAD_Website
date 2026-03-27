@@ -24,33 +24,43 @@
         <div class="contact-grid">
           <div class="card">
             <h2>Información de Contacto</h2>
-            <p><strong>Teléfono 1:</strong> <a href="tel:+17874253887">787-425-3887</a></p>
-            <p><strong>Teléfono 2:</strong> <a href="tel:+17874464469">787-446-4469</a></p>
-            <p><strong>Email:</strong> <a href="mailto:ebanisteriacad@gmail.com">ebanisteriacad@gmail.com</a></p>
+            <p><strong>Teléfono:</strong> <a id="contactPhoneLink" href="tel:+17874310110">787-431-0110</a></p>
+            <p><strong>Email:</strong> <a id="contactEmailLink" href="mailto:ebanisteriacad@gmail.com">ebanisteriacad@gmail.com</a></p>
             <p style="margin-top: 1rem;">
-              <a class="btn btn-primary" href="https://wa.me/17874464469" target="_blank" rel="noopener noreferrer">Escribir por WhatsApp</a>
+              <a id="contactWhatsappLink" class="btn btn-primary" href="https://wa.me/17874310110" target="_blank" rel="noopener noreferrer">Escribir por WhatsApp</a>
             </p>
 
             <hr style="margin: 1rem 0; border: 0; border-top: 1px solid #e6ddd4;" />
 
             <h3>Horario de Servicio</h3>
-            <p>Lunes a Viernes: 8:00 AM - 5:00 PM</p>
-            <p>Sábado: 9:00 AM - 1:00 PM</p>
-            <p>Domingo: Cerrado</p>
+            <p id="contactHoursWeekdays">Lunes a Viernes: 7:00 AM - 4:00 PM</p>
+            <p id="contactHoursWeekends">Sábado/Domingo: Cerrado</p>
 
             <h3 style="margin-top: 1rem;">Área de Servicio</h3>
-            <p>San Juan, Caguas y pueblos cercanos en Puerto Rico.</p>
+            <p id="contactServiceArea">Toda la Isla de Puerto Rico.</p>
+            <h3 style="margin-top: 1rem;">Ubicación</h3>
+            <p>
+              <a id="contactAddressLink" href="https://maps.app.goo.gl/7vM7WgmYDUv6VzQZ9" target="_blank" rel="noopener noreferrer">
+                BO Quebrada Arenas Hollywood Hill Carr #1 8-A Calle 3 San Juan, PR 00926
+              </a>
+            </p>
+            <p>Visitas al taller con cita previa.</p>
           </div>
 
           <div>
-            <!-- Reemplaza src por tu embed real de Google Maps -->
             <iframe
+              id="contactMapFrame"
               class="map-frame"
-              src="https://www.google.com/maps?q=Puerto+Rico&output=embed"
+              src="https://www.google.com/maps?q=BO%20Quebrada%20Arenas%20Hollywood%20Hill%20Carr%20%231%208-A%20Calle%203%20San%20Juan%2C%20PR%2000926&output=embed"
               loading="lazy"
               referrerpolicy="no-referrer-when-downgrade"
               title="Mapa de ubicación de Ebanistería CAD"
             ></iframe>
+            <p style="margin-top: 0.75rem;">
+              <a id="contactMapOpenLink" class="btn btn-outline" href="https://maps.app.goo.gl/7vM7WgmYDUv6VzQZ9" target="_blank" rel="noopener noreferrer">
+                Abrir en Google Maps
+              </a>
+            </p>
           </div>
         </div>
       </div>
@@ -58,6 +68,9 @@
   </main>
 
   <footer class="site-footer"></footer>
-  <script src="script.js?v=20260303"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js?v=20260326s"></script>
+  <script src="script.js?v=20260326s"></script>
 </body>
 </html>

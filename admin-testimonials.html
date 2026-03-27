@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Resumen Admin | Ebanistería CAD</title>
-  <meta name="description" content="Resumen administrativo de Ebanistería CAD." />
+  <title>Testimonios Admin | Ebanistería CAD</title>
+  <meta name="description" content="Gestión de testimonios en formato imagen para la homepage." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="admin-body">
@@ -58,59 +58,46 @@
 
       <main class="admin-main">
         <section class="admin-section">
-          <h1 class="section-title">Resumen</h1>
-          <p class="section-subtitle">Vista rápida del panel y accesos directos a cada área administrativa.</p>
+          <h1 class="section-title">Testimonios</h1>
+          <div class="card admin-content-card">
+            <div class="admin-section-head">
+              <div>
+                <h3>Administra testimonios en formato imagen para la homepage</h3>
+                <p>Sube reseñas en formato imagen como la referencia que compartiste.</p>
+              </div>
+              <div class="admin-inline-actions">
+                <button id="openTestimonialEditorBtn" class="btn btn-primary" type="button">Añadir testimonio</button>
+              </div>
+            </div>
 
-          <div class="grid grid-4 admin-stats">
-            <article class="card admin-stat-card">
-              <span>Total Solicitudes</span>
-              <strong id="statTotal">0</strong>
-            </article>
-            <article class="card admin-stat-card">
-              <span>Esta Semana</span>
-              <strong id="statWeek">0</strong>
-            </article>
-            <article class="card admin-stat-card">
-              <span>Pendientes</span>
-              <strong id="statPending">0</strong>
-            </article>
-            <article class="card admin-stat-card">
-              <span>Completadas</span>
-              <strong id="statDone">0</strong>
-            </article>
-          </div>
+            <form id="testimonialForm" class="admin-content-form" hidden>
+              <div class="grid grid-2">
+                <div>
+                  <label for="testimonialTitle">Título / lugar</label>
+                  <input id="testimonialTitle" type="text" placeholder="Ej. Gurabo" required />
+                </div>
+                <div>
+                  <label for="testimonialImage">Imagen del testimonio</label>
+                  <input id="testimonialImage" type="file" accept="image/*" />
+                </div>
+              </div>
 
-          <div class="grid grid-2" style="margin-top: 1.25rem;">
-            <article class="card">
-              <h3>Solicitudes</h3>
-              <p class="section-subtitle">Revisa cotizaciones, crea solicitudes manuales y actualiza estados.</p>
-              <a class="btn btn-primary" href="admin-requests.html">Abrir Solicitudes</a>
-            </article>
-            <article class="card">
-              <h3>Diseños / Galería</h3>
-              <p class="section-subtitle">Administra categorías, portadas, fotos y orden público de la galería.</p>
-              <a class="btn btn-primary" href="admin-designs.html">Abrir Diseños</a>
-            </article>
-            <article class="card">
-              <h3>Proyectos Recientes</h3>
-              <p class="section-subtitle">Administra las 3 tarjetas visibles en la homepage y sus galerías.</p>
-              <a class="btn btn-primary" href="admin-projects.html">Abrir Proyectos</a>
-            </article>
-            <article class="card">
-              <h3>Testimonios</h3>
-              <p class="section-subtitle">Gestiona las reseñas en imagen que se muestran en la homepage.</p>
-              <a class="btn btn-primary" href="admin-testimonials.html">Abrir Testimonios</a>
-            </article>
-            <article class="card">
-              <h3>Precios</h3>
-              <p class="section-subtitle">Edita planes, promociones, contenido enriquecido y orden de tarjetas.</p>
-              <a class="btn btn-primary" href="admin-pricing.html">Abrir Precios</a>
-            </article>
-            <article class="card">
-              <h3>Ajustes</h3>
-              <p class="section-subtitle">Área reservada para configuraciones del panel y futuras preferencias.</p>
-              <a class="btn btn-outline" href="admin-settings.html">Abrir Ajustes</a>
-            </article>
+              <div id="testimonialImagePreview" class="quote-image-preview" hidden></div>
+
+              <div class="admin-inline-actions">
+                <button class="btn btn-primary" type="submit">Guardar testimonio</button>
+                <button id="testimonialResetBtn" class="btn btn-outline" type="button">Cancelar</button>
+                <p id="testimonialFormStatus" class="form-status" role="status" aria-live="polite"></p>
+              </div>
+            </form>
+
+            <div class="admin-list-block">
+              <div class="admin-list-head">
+                <h3>Testimonios publicados</h3>
+                <p>La homepage muestra 9 testimonios inicialmente, con opcion de ver mas.</p>
+              </div>
+              <div id="testimonialsAdminList" class="admin-card-list"></div>
+            </div>
           </div>
         </section>
       </main>

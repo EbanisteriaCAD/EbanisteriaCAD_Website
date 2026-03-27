@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solicitudes Admin | Ebanistería CAD</title>
+  <meta name="description" content="Gestión de solicitudes y cotizaciones." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="admin-body">
+  <section id="authShell" class="admin-auth-shell">
+    <div class="card admin-auth-card">
+      <p class="admin-auth-kicker">Firebase Auth</p>
+      <h1>Protege el panel con Google</h1>
+      <p class="admin-auth-copy">Inicia sesión con una cuenta autorizada para entrar al panel administrativo.</p>
+      <div id="authNotice" class="admin-warning admin-auth-warning" hidden></div>
+      <button id="signInBtn" class="btn btn-primary" type="button">Continuar con Google</button>
+      <p id="authStatus" class="form-status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <div id="protectedApp" class="admin-app-shell" hidden>
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <button id="sidebarToggle" class="admin-icon-btn" type="button" aria-label="Abrir menú">
+          <span></span><span></span><span></span>
+        </button>
+        <a class="admin-brand" href="index.html" aria-label="Ir al sitio público">
+          <span class="admin-brand-logo-wrap">
+            <img src="assets/logo.jpg" alt="Logo Ebanistería CAD" class="admin-brand-logo" />
+          </span>
+          <div>
+            <strong>Admin Panel</strong>
+            <small>Ebanistería CAD</small>
+          </div>
+        </a>
+      </div>
+      <div class="admin-topbar-right">
+        <span id="adminNow" class="admin-now">--</span>
+        <span id="adminUserLabel" class="admin-user-label">Invitado</span>
+        <span id="adminUserDot" class="admin-user-dot" aria-hidden="true">A</span>
+        <button id="signOutBtn" class="btn btn-outline admin-signout-btn" type="button" hidden>Salir</button>
+      </div>
+    </header>
+
+    <div class="admin-layout">
+      <aside id="adminSidebar" class="admin-sidebar" aria-label="Navegación de administración">
+        <nav>
+          <a href="admin.html" class="admin-nav-link">Resumen</a>
+          <a href="admin-requests.html" class="admin-nav-link">Solicitudes (Cotizaciones)</a>
+          <a href="admin-designs.html" class="admin-nav-link">Diseños / Galería</a>
+          <a href="admin-projects.html" class="admin-nav-link">Proyectos Recientes</a>
+          <a href="admin-testimonials.html" class="admin-nav-link">Testimonios</a>
+          <a href="admin-pricing.html" class="admin-nav-link">Precios</a>
+          <a href="admin-settings.html" class="admin-nav-link">Ajustes</a>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <section class="admin-section">
+          <h1 class="section-title">Solicitudes (Cotizaciones)</h1>
+          <p class="section-subtitle">Busca, filtra y gestiona el estado de tus solicitudes.</p>
+
+          <div class="card">
+            <div class="admin-inline-actions" style="margin-bottom: 1rem;">
+              <button id="toggleManualQuoteBtn" class="btn btn-primary" type="button">Crear Cotizacion Manual</button>
+            </div>
+
+            <div id="manualQuoteCard" class="admin-manual-quote-card" hidden>
+              <h3>Cotizacion Manual</h3>
+              <p class="section-subtitle">Crea una solicitud desde el panel administrativo con la misma información que llena el cliente.</p>
+
+              <form id="manualQuoteForm" class="admin-content-form">
+                <div class="grid grid-2">
+                  <div>
+                    <label for="manualQuoteName">Nombre *</label>
+                    <input id="manualQuoteName" type="text" required />
+                  </div>
+                  <div>
+                    <label for="manualQuotePhone">Teléfono *</label>
+                    <input id="manualQuotePhone" type="tel" required />
+                  </div>
+                  <div class="form-span-2">
+                    <label for="manualQuoteAddressLine">Dirección *</label>
+                    <input id="manualQuoteAddressLine" type="text" required />
+                  </div>
+                  <div>
+                    <label for="manualQuoteCity">Pueblo *</label>
+                    <input id="manualQuoteCity" type="text" required />
+                  </div>
+                  <div>
+                    <label for="manualQuoteStateRegion">Estado *</label>
+                    <input id="manualQuoteStateRegion" type="text" required />
+                  </div>
+                  <div>
+                    <label for="manualQuotePostalCode">Codigo Postal *</label>
+                    <input id="manualQuotePostalCode" type="text" required />
+                  </div>
+                  <div>
+                    <label for="manualQuoteEmail">Email *</label>
+                    <input id="manualQuoteEmail" type="email" required />
+                  </div>
+                  <div>
+                    <label for="manualQuoteCategory">Categoría *</label>
+                    <select id="manualQuoteCategory" required>
+                      <option value="">Selecciona una categoría</option>
+                      <option value="Cocinas">Cocinas</option>
+                      <option value="Closets">Closets</option>
+                      <option value="Centros TV">Centros TV</option>
+                      <option value="Baños">Baños</option>
+                      <option value="Comercial">Comercial</option>
+                      <option value="Remodelación">Remodelación</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="manualQuoteMeasures">Medidas aproximadas</label>
+                    <input id="manualQuoteMeasures" type="text" />
+                  </div>
+                  <div>
+                    <label for="manualQuoteMaterial">Material preferido</label>
+                    <select id="manualQuoteMaterial">
+                      <option value="">Selecciona un material</option>
+                      <option value="PVC Laminado">PVC Laminado</option>
+                      <option value="PVC Pintado">PVC Pintado</option>
+                      <option value="Panel Tratado Pintado">Panel Tratado Pintado</option>
+                      <option value="Panel Tratado Laminado">Panel Tratado Laminado</option>
+                      <option value="Panel de Madera Pintado">Panel de Madera Pintado</option>
+                      <option value="Panel de Madera Laminado">Panel de Madera Laminado</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="manualQuoteBudget">Presupuesto estimado</label>
+                    <input id="manualQuoteBudget" type="text" />
+                  </div>
+                  <div>
+                    <label for="manualQuoteStatus">Estado inicial</label>
+                    <select id="manualQuoteStatus">
+                      <option value="new">Nuevo</option>
+                      <option value="in_progress">En Proceso</option>
+                      <option value="completed">Completado</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label for="manualQuoteImages">Fotos del proyecto</label>
+                  <input id="manualQuoteImages" type="file" accept="image/*" multiple />
+                  <p class="field-help">Puedes subir hasta 10 fotos para esta cotización manual.</p>
+                  <div id="manualQuoteImagesPreview" class="quote-image-preview" hidden></div>
+                </div>
+
+                <div>
+                  <label for="manualQuoteMessage">Mensaje *</label>
+                  <textarea id="manualQuoteMessage" rows="5" required></textarea>
+                </div>
+
+                <div class="admin-inline-actions">
+                  <button class="btn btn-primary" type="submit">Guardar Cotización</button>
+                  <button id="cancelManualQuoteBtn" class="btn btn-outline" type="button">Cancelar</button>
+                  <p id="manualQuoteStatusMessage" class="form-status" role="status" aria-live="polite"></p>
+                </div>
+              </form>
+            </div>
+
+            <div class="admin-toolbar">
+              <input id="searchInput" type="search" placeholder="Buscar por nombre, email, teléfono, dirección o categoría" />
+              <select id="statusFilter" aria-label="Filtrar por estado">
+                <option value="Todos">Todos</option>
+                <option value="Nuevo">Nuevo</option>
+                <option value="En Proceso">En Proceso</option>
+                <option value="Completado">Completado</option>
+              </select>
+            </div>
+
+            <div id="loadingState" class="admin-loading" hidden>Cargando solicitudes...</div>
+            <div id="emptyState" class="admin-empty" hidden>
+              <p>No hay solicitudes todavía.</p>
+              <button id="openManualQuoteEmptyBtn" class="btn btn-outline" type="button">Crear Cotizacion Manual</button>
+            </div>
+
+            <div class="admin-table-wrap" id="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody id="requestsTbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="admin-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <div id="requestModal" class="admin-modal" hidden>
+    <div class="admin-modal-backdrop" data-close-modal="true"></div>
+    <div class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
+      <div class="admin-modal-head">
+        <h3 id="requestModalTitle">Detalle de Solicitud</h3>
+        <button id="closeModalBtn" class="admin-icon-btn" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div id="modalContent" class="admin-modal-body"></div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js?v=20260326s"></script>
+  <script src="firebase-auth.js?v=20260326s"></script>
+  <script src="quote-service.js?v=20260326s"></script>
+  <script src="content-service.js?v=20260326s"></script>
+  <script src="admin.js?v=20260326s"></script>
+  <script src="admin-content.js?v=20260326s"></script>
+</body>
+</html>

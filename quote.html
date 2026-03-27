@@ -33,6 +33,22 @@
                 <label for="phone">Teléfono *</label>
                 <input id="phone" name="telefono" type="tel" required />
               </div>
+              <div class="form-span-2">
+                <label for="addressLine">Direccion *</label>
+                <input id="addressLine" name="direccion" type="text" placeholder="Ej. Urb. Los Pinos, 1A3, Calle Roberto Clemente" required />
+              </div>
+              <div>
+                <label for="city">Pueblo *</label>
+                <input id="city" name="pueblo" type="text" placeholder="Ej. Caguas" required />
+              </div>
+              <div>
+                <label for="stateRegion">Estado *</label>
+                <input id="stateRegion" name="estado" type="text" placeholder="Ej. PR" required />
+              </div>
+              <div>
+                <label for="postalCode">Codigo Postal *</label>
+                <input id="postalCode" name="codigo_postal" type="text" inputmode="numeric" placeholder="Ej. 00725" required />
+              </div>
               <div>
                 <label for="email">Email *</label>
                 <input id="email" name="email" type="email" required />
@@ -45,6 +61,7 @@
                   <option value="Closets">Closets</option>
                   <option value="Centros TV">Centros TV</option>
                   <option value="Baños">Baños</option>
+                  <option value="Comercial">Comercial</option>
                   <option value="Remodelación">Remodelación</option>
                 </select>
               </div>
@@ -54,12 +71,27 @@
               </div>
               <div>
                 <label for="material">Material preferido</label>
-                <input id="material" name="material" type="text" placeholder="PVC, madera, etc." />
+                <select id="material" name="material">
+                  <option value="">Selecciona un material</option>
+                  <option value="PVC Laminado">PVC Laminado</option>
+                  <option value="PVC Pintado">PVC Pintado</option>
+                  <option value="Panel Tratado Pintado">Panel Tratado Pintado</option>
+                  <option value="Panel Tratado Laminado">Panel Tratado Laminado</option>
+                  <option value="Panel de Madera Pintado">Panel de Madera Pintado</option>
+                  <option value="Panel de Madera Laminado">Panel de Madera Laminado</option>
+                </select>
               </div>
               <div>
                 <label for="budget">Presupuesto estimado</label>
                 <input id="budget" name="presupuesto" type="text" placeholder="Ej. $5,000 - $8,000" />
               </div>
+            </div>
+
+            <div>
+              <label for="projectImages">Fotos del proyecto</label>
+              <input id="projectImages" name="projectImages" type="file" accept="image/*" multiple />
+              <p id="quoteImagesHelp" class="field-help">Puedes subir hasta 10 fotos para ayudarnos a entender mejor tu proyecto.</p>
+              <div id="projectImagesPreview" class="quote-image-preview" hidden></div>
             </div>
 
             <div>
@@ -76,6 +108,11 @@
   </main>
 
   <footer class="site-footer"></footer>
-  <script src="script.js?v=20260303"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js?v=20260326s"></script>
+  <script src="quote-service.js?v=20260326s"></script>
+  <script src="script.js?v=20260326s"></script>
 </body>
 </html>

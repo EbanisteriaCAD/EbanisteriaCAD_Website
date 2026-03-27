@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -21,57 +21,38 @@
         <h1 class="section-title">Diseños y Estilos</h1>
         <p class="section-subtitle">Selecciona una categoría y cotiza el estilo que más te guste.</p>
 
-        <div class="hero-actions" style="margin-bottom: 1rem;">
-          <a class="btn btn-outline" href="#cocinas">Cocinas</a>
-          <a class="btn btn-outline" href="#closets">Closets</a>
-          <a class="btn btn-outline" href="#centros-tv">Centros TV</a>
-          <a class="btn btn-outline" href="#banos">Baños</a>
-          <a class="btn btn-outline" href="#remodelacion">Remodelación</a>
-        </div>
-
-        <div class="grid grid-3" id="cocinas">
-          <article class="card gallery-card">
-            <img class="gallery-thumb" src="assets/index-hero.jpg" alt="Diseño de cocina moderna en tonos madera" />
-            <h3>Cocina Moderna</h3>
-            <p>Distribución limpia con acabados de lujo y máxima funcionalidad.</p>
-            <a class="btn btn-primary" href="quote.html?cat=Cocinas">Cotizar este estilo</a>
-          </article>
-          <article class="card gallery-card" id="closets">
-            <img class="gallery-thumb" src="assets/index-hero.jpg" alt="Diseño de closet empotrado con almacenamiento inteligente" />
-            <h3>Closet Empotrado</h3>
-            <p>Optimiza tu espacio con módulos, gavetas y terminaciones elegantes.</p>
-            <a class="btn btn-primary" href="quote.html?cat=Closets">Cotizar este estilo</a>
-          </article>
-          <article class="card gallery-card" id="centros-tv">
-            <img class="gallery-thumb" src="assets/index-hero.jpg" alt="Centro de entretenimiento en madera para sala" />
-            <h3>Centro TV</h3>
-            <p>Diseño para integrar equipos, almacenamiento y estética moderna.</p>
-            <a class="btn btn-primary" href="quote.html?cat=Centros TV">Cotizar este estilo</a>
-          </article>
-          <article class="card gallery-card" id="banos">
-            <img class="gallery-thumb" src="assets/index-hero.jpg" alt="Mueble de baño a medida con acabado contemporáneo" />
-            <h3>Baño</h3>
-            <p>Gabinetes resistentes a humedad con estilo y practicidad.</p>
-            <a class="btn btn-primary" href="quote.html?cat=Baños">Cotizar este estilo</a>
-          </article>
-          <article class="card gallery-card" id="remodelacion">
-            <img class="gallery-thumb" src="assets/index-hero.jpg" alt="Remodelación interior con trabajo de ebanistería personalizada" />
-            <h3>Remodelación</h3>
-            <p>Renovamos espacios completos con una propuesta integral.</p>
-            <a class="btn btn-primary" href="quote.html?cat=Remodelación">Cotizar este estilo</a>
-          </article>
-          <article class="card gallery-card">
-            <img class="gallery-thumb" src="assets/index-hero.jpg" alt="Proyecto personalizado de ebanistería residencial" />
-            <h3>Proyecto Personalizado</h3>
-            <p>Creamos soluciones únicas según tu estilo y medidas.</p>
-            <a class="btn btn-primary" href="quote.html?cat=Remodelación">Cotizar este estilo</a>
-          </article>
-        </div>
+        <div id="designsCategoryNav" class="hero-actions" style="margin-bottom: 1rem;" hidden></div>
+        <div id="designsStatus" class="form-status info" hidden>Cargando diseños...</div>
+        <div id="designsGrid" class="grid grid-3"></div>
       </div>
     </section>
   </main>
 
+  <div id="publicGalleryModal" class="public-gallery-modal" hidden>
+    <div class="public-gallery-backdrop" data-gallery-close="true"></div>
+    <div class="public-gallery-card" role="dialog" aria-modal="true" aria-labelledby="publicGalleryTitle">
+      <div class="public-gallery-head">
+        <div>
+          <h3 id="publicGalleryTitle">Galería</h3>
+          <p id="publicGalleryMeta" class="public-gallery-meta"></p>
+        </div>
+        <button id="publicGalleryClose" class="admin-icon-btn" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div id="publicGalleryStage" class="public-gallery-stage">
+        <button id="publicGalleryPrev" class="public-gallery-nav prev" type="button" aria-label="Imagen anterior"><</button>
+        <img id="publicGalleryImage" class="public-gallery-image" alt="" />
+        <button id="publicGalleryNext" class="public-gallery-nav next" type="button" aria-label="Imagen siguiente">></button>
+      </div>
+      <div id="publicGalleryThumbs" class="public-gallery-thumbs"></div>
+    </div>
+  </div>
+
   <footer class="site-footer"></footer>
-  <script src="script.js?v=20260303"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js?v=20260326s"></script>
+  <script src="content-service.js?v=20260326s"></script>
+  <script src="script.js?v=20260326s"></script>
+  <script src="content-page.js?v=20260326s"></script>
 </body>
 </html>

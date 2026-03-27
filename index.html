@@ -27,7 +27,7 @@
       </div>
     </section>
 
-    <section class="section">
+      <section id="recentProjectsSection" class="section">
       <div class="container">
         <h2 class="section-title">Por Qué Elegirnos</h2>
         <p class="section-subtitle">Más de una década en la industria, con enfoque en detalle, tiempos y comunicación.</p>
@@ -52,7 +52,7 @@
       </div>
     </section>
 
-    <section class="section">
+      <section id="testimonialsSection" class="section">
       <div class="container">
         <h2 class="section-title">Nuestro Proceso</h2>
         <p class="section-subtitle">Un flujo claro para llevar tu proyecto de la idea a la instalación final.</p>
@@ -85,23 +85,8 @@
       <div class="container">
         <h2 class="section-title">Proyectos Recientes</h2>
         <p class="section-subtitle">Algunos estilos que nuestros clientes han solicitado recientemente.</p>
-        <div class="grid grid-3">
-          <article class="card project-card">
-            <img class="project-thumb" src="assets/index-hero.jpg" alt="Proyecto de cocina moderna con madera clara" />
-            <h3>Cocina Moderna</h3>
-            <p>Líneas limpias, iluminación integrada y almacenaje optimizado.</p>
-          </article>
-          <article class="card project-card">
-            <img class="project-thumb" src="assets/index-hero.jpg" alt="Proyecto de closet empotrado con acabado elegante" />
-            <h3>Closet Empotrado</h3>
-            <p>Soluciones funcionales para organización y estética.</p>
-          </article>
-          <article class="card project-card">
-            <img class="project-thumb" src="assets/index-hero.jpg" alt="Centro de entretenimiento en sala con panelado en madera" />
-            <h3>Centro TV</h3>
-            <p>Diseño a medida para integrar tecnología y estilo.</p>
-          </article>
-        </div>
+        <div id="recentProjectsStatus" class="form-status info" hidden>Cargando proyectos recientes...</div>
+        <div id="recentProjectsGrid" class="grid grid-3"></div>
       </div>
     </section>
 
@@ -109,25 +94,40 @@
       <div class="container">
         <h2 class="section-title">Testimonios</h2>
         <p class="section-subtitle">Opiniones de clientes satisfechos con nuestro trabajo.</p>
-        <div class="grid grid-3">
-          <article class="card testimonial-card">
-            <h3>“Excelente trabajo”</h3>
-            <p>“Cumplieron con fecha y presupuesto. La cocina quedó tal como la soñamos.”</p>
-          </article>
-          <article class="card testimonial-card">
-            <h3>“Muy responsables”</h3>
-            <p>“Desde el diseño hasta la instalación, el equipo fue puntual y profesional.”</p>
-          </article>
-          <article class="card testimonial-card">
-            <h3>“Calidad premium”</h3>
-            <p>“Los acabados y materiales superaron nuestras expectativas.”</p>
-          </article>
+        <div id="testimonialsStatus" class="form-status info" hidden>Cargando testimonios...</div>
+        <div id="testimonialsGrid" class="grid grid-3"></div>
+        <div class="section-actions">
+          <button id="testimonialsMoreBtn" class="btn btn-outline" type="button" hidden>Ver mas</button>
         </div>
       </div>
     </section>
   </main>
 
+  <div id="publicGalleryModal" class="public-gallery-modal" hidden>
+    <div class="public-gallery-backdrop" data-gallery-close="true"></div>
+    <div class="public-gallery-card" role="dialog" aria-modal="true" aria-labelledby="publicGalleryTitle">
+      <div class="public-gallery-head">
+        <div>
+          <h3 id="publicGalleryTitle">Galería</h3>
+          <p id="publicGalleryMeta" class="public-gallery-meta"></p>
+        </div>
+        <button id="publicGalleryClose" class="admin-icon-btn" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div id="publicGalleryStage" class="public-gallery-stage">
+        <button id="publicGalleryPrev" class="public-gallery-nav prev" type="button" aria-label="Imagen anterior"><</button>
+        <img id="publicGalleryImage" class="public-gallery-image" alt="" />
+        <button id="publicGalleryNext" class="public-gallery-nav next" type="button" aria-label="Imagen siguiente">></button>
+      </div>
+      <div id="publicGalleryThumbs" class="public-gallery-thumbs"></div>
+    </div>
+  </div>
+
   <footer class="site-footer"></footer>
-  <script src="script.js?v=20260303"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js?v=20260326s"></script>
+  <script src="content-service.js?v=20260326s"></script>
+  <script src="script.js?v=20260326s"></script>
+  <script src="content-page.js?v=20260326s"></script>
 </body>
 </html>

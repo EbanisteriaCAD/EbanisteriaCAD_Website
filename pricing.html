@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
@@ -21,48 +21,19 @@
         <h1 class="section-title">Planes y Precios</h1>
         <p class="section-subtitle">Costos iniciales de referencia. El precio final depende de medidas, materiales y complejidad.</p>
 
-        <div class="grid grid-3">
-          <article class="card package-card">
-            <h3>Plan Esencial</h3>
-            <p class="package-price">Desde $2,500</p>
-            <ul class="package-features">
-              <li>Módulo básico de cocina</li>
-              <li>Diseño funcional inicial</li>
-              <li>Materiales estándar</li>
-              <li>Instalación básica</li>
-            </ul>
-            <a class="btn btn-outline" href="quote.html?cat=Cocinas">Cotizar Plan</a>
-          </article>
-
-          <article class="card package-card">
-            <h3>Plan Premium</h3>
-            <p class="package-price">Desde $5,000</p>
-            <ul class="package-features">
-              <li>Proyecto completo personalizado</li>
-              <li>Mejoras en diseño y herrajes</li>
-              <li>Mayor capacidad de almacenaje</li>
-              <li>Instalación profesional completa</li>
-            </ul>
-            <a class="btn btn-primary" href="quote.html?cat=Remodelación">Cotizar Plan</a>
-          </article>
-
-          <article class="card package-card">
-            <h3>Plan Integral</h3>
-            <p class="package-price">A medida</p>
-            <ul class="package-features">
-              <li>Diseño a la medida del espacio</li>
-              <li>Selección de materiales premium</li>
-              <li>Proyecto por fases o completo</li>
-              <li>Asesoría directa en cada etapa</li>
-            </ul>
-            <a class="btn btn-outline" href="quote.html">Solicitar Evaluación</a>
-          </article>
-        </div>
+        <div id="pricingStatus" class="form-status info" hidden>Cargando precios...</div>
+        <div id="pricingGrid" class="grid grid-3"></div>
+        <div id="paymentMethodsWrap"></div>
       </div>
     </section>
   </main>
 
   <footer class="site-footer"></footer>
-  <script src="script.js?v=20260303"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <script src="firebase-config.js?v=20260326s"></script>
+  <script src="content-service.js?v=20260326s"></script>
+  <script src="script.js?v=20260326s"></script>
+  <script src="content-page.js?v=20260326s"></script>
 </body>
 </html>

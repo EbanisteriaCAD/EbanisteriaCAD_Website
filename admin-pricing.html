@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Precios Admin | Ebanistería CAD</title>
+  <meta name="description" content="Gestión de precios, promociones y tarjetas públicas." />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="admin-body">
+  <section id="authShell" class="admin-auth-shell">
+    <div class="card admin-auth-card">
+      <p class="admin-auth-kicker">Firebase Auth</p>
+      <h1>Protege el panel con Google</h1>
+      <p class="admin-auth-copy">Inicia sesión con una cuenta autorizada para entrar al panel administrativo.</p>
+      <div id="authNotice" class="admin-warning admin-auth-warning" hidden></div>
+      <button id="signInBtn" class="btn btn-primary" type="button">Continuar con Google</button>
+      <p id="authStatus" class="form-status" role="status" aria-live="polite"></p>
+    </div>
+  </section>
+
+  <div id="protectedApp" class="admin-app-shell" hidden>
+    <header class="admin-topbar">
+      <div class="admin-topbar-left">
+        <button id="sidebarToggle" class="admin-icon-btn" type="button" aria-label="Abrir menú">
+          <span></span><span></span><span></span>
+        </button>
+        <a class="admin-brand" href="index.html" aria-label="Ir al sitio público">
+          <span class="admin-brand-logo-wrap">
+            <img src="assets/logo.jpg" alt="Logo Ebanistería CAD" class="admin-brand-logo" />
+          </span>
+          <div>
+            <strong>Admin Panel</strong>
+            <small>Ebanistería CAD</small>
+          </div>
+        </a>
+      </div>
+      <div class="admin-topbar-right">
+        <span id="adminNow" class="admin-now">--</span>
+        <span id="adminUserLabel" class="admin-user-label">Invitado</span>
+        <span id="adminUserDot" class="admin-user-dot" aria-hidden="true">A</span>
+        <button id="signOutBtn" class="btn btn-outline admin-signout-btn" type="button" hidden>Salir</button>
+      </div>
+    </header>
+
+    <div class="admin-layout">
+      <aside id="adminSidebar" class="admin-sidebar" aria-label="Navegación de administración">
+        <nav>
+          <a href="admin.html" class="admin-nav-link">Resumen</a>
+          <a href="admin-requests.html" class="admin-nav-link">Solicitudes (Cotizaciones)</a>
+          <a href="admin-designs.html" class="admin-nav-link">Diseños / Galería</a>
+          <a href="admin-projects.html" class="admin-nav-link">Proyectos Recientes</a>
+          <a href="admin-testimonials.html" class="admin-nav-link">Testimonios</a>
+          <a href="admin-pricing.html" class="admin-nav-link">Precios</a>
+          <a href="admin-settings.html" class="admin-nav-link">Ajustes</a>
+        </nav>
+      </aside>
+
+      <main class="admin-main">
+        <section class="admin-section">
+          <h1 class="section-title">Precios</h1>
+          <div class="card admin-content-card">
+            <div class="admin-section-head">
+              <div>
+                <h3>Planes, ofertas y tarjetas personalizadas</h3>
+                <p>Ajusta precios, beneficios y mensajes promocionales para la página pública.</p>
+              </div>
+              <div class="admin-inline-actions">
+                <button id="openPricingEditorBtn" class="btn btn-primary" type="button">Añadir nuevo precio</button>
+              </div>
+            </div>
+
+            <form id="pricingCardForm" class="admin-content-form" hidden>
+              <div class="grid grid-2">
+                <div>
+                  <label for="pricingTitle">Título del plan</label>
+                  <input id="pricingTitle" type="text" placeholder="Ej. Plan Premium" required />
+                </div>
+                <div>
+                  <label for="pricingPrice">Precio o etiqueta</label>
+                  <input id="pricingPrice" type="text" placeholder="Ej. Desde $5,000" required />
+                </div>
+              </div>
+
+              <div class="grid grid-3">
+                <div>
+                  <label for="pricingBadge">Deal / etiqueta</label>
+                  <input id="pricingBadge" type="text" placeholder="Ej. Oferta del mes" />
+                </div>
+                <div>
+                  <label for="pricingQuoteCategory">Categoría para cotizar</label>
+                  <select id="pricingQuoteCategory">
+                    <option value="">General</option>
+                    <option value="Cocinas">Cocinas</option>
+                    <option value="Closets">Closets</option>
+                    <option value="Centros TV">Centros TV</option>
+                    <option value="Baños">Baños</option>
+                    <option value="Comercial">Comercial</option>
+                    <option value="Remodelación">Remodelación</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="pricingSortOrder">Orden</label>
+                  <input id="pricingSortOrder" type="number" min="0" step="1" value="0" />
+                </div>
+              </div>
+
+              <div>
+                <label for="pricingDescription">Descripción corta</label>
+                <div class="rich-editor-shell">
+                  <div class="rich-editor-toolbar" aria-label="Herramientas de formato">
+                    <select class="rich-toolbar-select" data-rich-action="formatBlock" data-rich-target="pricingDescription" aria-label="Estilo de texto">
+                      <option value="P">Normal</option>
+                      <option value="H3">Título</option>
+                      <option value="H4">Subtítulo</option>
+                      <option value="BLOCKQUOTE">Cita</option>
+                    </select>
+                    <span class="rich-toolbar-divider" aria-hidden="true"></span>
+                    <button class="rich-toolbar-btn" type="button" title="Negrita" aria-label="Negrita" data-rich-command="bold" data-rich-target="pricingDescription"><strong>B</strong></button>
+                    <button class="rich-toolbar-btn" type="button" title="Cursiva" aria-label="Cursiva" data-rich-command="italic" data-rich-target="pricingDescription"><em>I</em></button>
+                    <button class="rich-toolbar-btn" type="button" title="Subrayado" aria-label="Subrayado" data-rich-command="underline" data-rich-target="pricingDescription"><u>U</u></button>
+                    <button class="rich-toolbar-btn" type="button" title="Tachado" aria-label="Tachado" data-rich-command="strikeThrough" data-rich-target="pricingDescription"><s>S</s></button>
+                    <span class="rich-toolbar-divider" aria-hidden="true"></span>
+                    <button class="rich-toolbar-btn" type="button" title="Lista numerada" aria-label="Lista numerada" data-rich-command="insertOrderedList" data-rich-target="pricingDescription">1.</button>
+                    <button class="rich-toolbar-btn" type="button" title="Lista con viñetas" aria-label="Lista con viñetas" data-rich-command="insertUnorderedList" data-rich-target="pricingDescription">•</button>
+                    <span class="rich-toolbar-divider" aria-hidden="true"></span>
+                    <button class="rich-toolbar-btn" type="button" title="Insertar enlace" aria-label="Insertar enlace" data-rich-action="link" data-rich-target="pricingDescription">🔗</button>
+                    <button class="rich-toolbar-btn" type="button" title="Insertar cita" aria-label="Insertar cita" data-rich-action="quote" data-rich-target="pricingDescription">❞</button>
+                    <button class="rich-toolbar-btn" type="button" title="Insertar imagen" aria-label="Insertar imagen" data-rich-action="image" data-rich-target="pricingDescription">🖼</button>
+                    <button class="rich-toolbar-btn" type="button" title="Limpiar formato" aria-label="Limpiar formato" data-rich-action="clear" data-rich-target="pricingDescription">Tx</button>
+                  </div>
+                  <div id="pricingDescription" class="rich-editor" contenteditable="true" role="textbox" aria-multiline="true" data-placeholder="Mensaje corto para destacar el plan o la oferta."></div>
+                  <input id="pricingDescriptionImageInput" type="file" accept="image/*" hidden />
+                </div>
+                <p class="field-help">Puedes escribir varias líneas, usar viñetas, emojis, enlaces, texto en negrita e insertar imágenes.</p>
+              </div>
+
+              <div>
+                <label for="pricingFeatures">Beneficios (uno por línea)</label>
+                <textarea id="pricingFeatures" rows="5" placeholder="Proyecto completo personalizado&#10;Mejoras en diseño y herrajes&#10;Instalación profesional completa"></textarea>
+              </div>
+
+              <div class="grid grid-2">
+                <div>
+                  <label for="pricingCtaLabel">Texto del botón</label>
+                  <input id="pricingCtaLabel" type="text" placeholder="Ej. Cotizar Plan" />
+                </div>
+                <div class="admin-checkbox-wrap">
+                  <label class="admin-checkbox-label" for="pricingHighlighted">
+                    <input id="pricingHighlighted" type="checkbox" />
+                    Destacar esta tarjeta en la página pública
+                  </label>
+                </div>
+              </div>
+
+              <div class="admin-inline-actions">
+                <button class="btn btn-primary" type="submit">Guardar tarjeta</button>
+                <button id="pricingResetBtn" class="btn btn-outline" type="button">Cancelar</button>
+                <p id="pricingFormStatus" class="form-status" role="status" aria-live="polite"></p>
+              </div>
+            </form>
+
+            <div class="admin-list-block">
+              <div class="admin-list-head">
+                <h3>Tarjetas activas</h3>
+                <p>Edita precios, deals y beneficios desde aquí.</p>
+              </div>
+              <div id="pricingCardsList" class="admin-card-list"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="toastContainer" class="admin-toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-storage-compat.js"></script>
+  <script src="firebase-config.js?v=20260326s"></script>
+  <script src="firebase-auth.js?v=20260326s"></script>
+  <script src="quote-service.js?v=20260326s"></script>
+  <script src="content-service.js?v=20260326s"></script>
+  <script src="admin.js?v=20260326s"></script>
+  <script src="admin-content.js?v=20260326s"></script>
+</body>
+</html>
