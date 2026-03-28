@@ -21,6 +21,21 @@ This repo now uses Firebase for three things:
 
 ## 1. Update `firebase-config.js`
 
+This repo now supports separate Firebase environments:
+
+- `production`: used automatically on the live domain
+- `development`: used automatically on `localhost`, `127.0.0.1`, and other local testing hosts
+
+Inside `firebase-config.js`:
+
+- keep the real production config under `production`
+- replace the `REPLACE_WITH_DEV_...` values under `development` with the Firebase web config from your dev Firebase project
+
+Important:
+
+- local testing should use a separate Firebase project from production
+- if the development config is left as placeholders, localhost will not connect to Firebase, which is safer than accidentally changing production
+
 Replace `allowedAdminEmails` with the exact Google account emails that should be allowed into the admin portal.
 
 Example:

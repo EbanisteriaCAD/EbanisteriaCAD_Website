@@ -53,6 +53,10 @@
     return String(value || '').trim();
   }
 
+  function isFilledFirebaseValue(value) {
+    return typeof value === 'string' && value.trim() && value.indexOf('REPLACE_WITH_') !== 0;
+  }
+
   function uniqueStrings(values) {
     var seen = Object.create(null);
     return (Array.isArray(values) ? values : [])
@@ -123,7 +127,13 @@
     }
 
     var config = getFirebaseConfig();
-    if (!config || !config.apiKey || !config.projectId || !config.appId) {
+    if (
+      !config ||
+      config.isReady === false ||
+      !isFilledFirebaseValue(config.apiKey) ||
+      !isFilledFirebaseValue(config.projectId) ||
+      !isFilledFirebaseValue(config.appId)
+    ) {
       return null;
     }
 
