@@ -1,6 +1,7 @@
 {
   "projects": {
     "default": "ebanisteriacad-14643",
-    "production": "ebanisteriacad-14643"
+    "production": "ebanisteriacad-14643",
+    "development": "ebanisteriacad-dev"
   }
 }
