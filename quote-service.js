@@ -160,7 +160,12 @@ var QuoteService;
   }
 
   function nowTimestamp() {
-    return init().firestore.constructor.Timestamp.now();
+    var timestampApi = window.firebase && window.firebase.firestore && window.firebase.firestore.Timestamp;
+    if (timestampApi && typeof timestampApi.now === 'function') {
+      return timestampApi.now();
+    }
+
+    return new Date();
   }
 
   function normalizeSimpleArray(input) {
@@ -532,14 +537,20 @@ var QuoteService;
       return value;
     }
 
+    var timestampApi = window.firebase && window.firebase.firestore && window.firebase.firestore.Timestamp;
+
     if (value instanceof Date && !Number.isNaN(value.getTime())) {
-      return init().firestore.constructor.Timestamp.fromDate(value);
+      return timestampApi && typeof timestampApi.fromDate === 'function'
+        ? timestampApi.fromDate(value)
+        : value;
     }
 
     if (typeof value === 'string' && value.trim()) {
       var parsed = new Date(value);
       if (!Number.isNaN(parsed.getTime())) {
-        return init().firestore.constructor.Timestamp.fromDate(parsed);
+        return timestampApi && typeof timestampApi.fromDate === 'function'
+          ? timestampApi.fromDate(parsed)
+          : parsed;
       }
     }
 
