@@ -368,6 +368,7 @@ var QuoteService;
 
   function publishLatestQuotes() {
     var merged = getMergedLatestQuotes();
+    setLatestQuotes(merged);
     notifyQuotesUpdated(merged);
     return merged;
   }
@@ -630,7 +631,7 @@ var QuoteService;
   }
 
   async function createProject(project, files) {
-    assertSafeWrite();
+    assertSafeWrite({ requireConfirmation: true });
 
     var normalized = normalizeQuote(project);
     var uploadedAttachments = await uploadAttachments(normalized.id, files || []);
@@ -710,7 +711,7 @@ var QuoteService;
   async function deleteQuote(id) {
     if (!id) return false;
     var current = getProjectById(id);
-    assertSafeWrite();
+    assertSafeWrite({ requireConfirmation: true });
     if (current) {
       var auditId = generateEntityId('AUDIT');
       await adminAuditCollectionRef().doc(auditId).set({
@@ -743,7 +744,7 @@ var QuoteService;
     var items = Array.isArray(quotes) ? quotes.map(normalizeQuote) : [];
     if (!items.length) return [];
 
-    assertSafeWrite();
+    assertSafeWrite({ requireConfirmation: true });
     var batch = init().firestore.batch();
     items.forEach(function (quote) {
       batch.set(projectsCollectionRef().doc(quote.id), serializeProjectForFirestore(quote));
