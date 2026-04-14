@@ -1,5 +1,6 @@
+import { ContentService } from './content-service.js';
+
 (function () {
-  var ContentService = window.ContentService;
 
   var state = {
     booted: false,
@@ -1022,10 +1023,6 @@
 
     if (openBtn) {
       openBtn.addEventListener('click', function () {
-        if (state.testimonials.length >= 3 && !state.editingTestimonialId) {
-          showToast('info', 'Ya tienes 3 testimonios publicados. Edita uno existente para reemplazarlo.');
-          return;
-        }
         resetTestimonialForm();
         setTestimonialEditorVisible(true);
       });

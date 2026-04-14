@@ -47,7 +47,7 @@
       <aside id="adminSidebar" class="admin-sidebar" aria-label="Navegación de administración">
         <nav>
           <a href="admin.html" class="admin-nav-link">Resumen</a>
-          <a href="admin-requests.html" class="admin-nav-link">Solicitudes (Cotizaciones)</a>
+          <a href="admin-requests.html" class="admin-nav-link">Clientes / Proyectos</a>
           <a href="admin-designs.html" class="admin-nav-link">Diseños / Galería</a>
           <a href="admin-projects.html" class="admin-nav-link">Proyectos Recientes</a>
           <a href="admin-testimonials.html" class="admin-nav-link">Testimonios</a>
@@ -63,7 +63,7 @@
 
           <div class="grid grid-4 admin-stats">
             <article class="card admin-stat-card">
-              <span>Total Solicitudes</span>
+              <span>Total Registros</span>
               <strong id="statTotal">0</strong>
             </article>
             <article class="card admin-stat-card">
@@ -82,9 +82,9 @@
 
           <div class="grid grid-2" style="margin-top: 1.25rem;">
             <article class="card">
-              <h3>Solicitudes</h3>
-              <p class="section-subtitle">Revisa cotizaciones, crea solicitudes manuales y actualiza estados.</p>
-              <a class="btn btn-primary" href="admin-requests.html">Abrir Solicitudes</a>
+              <h3>Clientes / Proyectos</h3>
+              <p class="section-subtitle">Revisa cotizaciones y proyectos, crea registros manuales y actualiza estados.</p>
+              <a class="btn btn-primary" href="admin-requests.html">Abrir Clientes / Proyectos</a>
             </article>
             <article class="card">
               <h3>Diseños / Galería</h3>
@@ -123,11 +123,11 @@
   <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-storage-compat.js"></script>
-  <script src="firebase-config.js?v=20260326s"></script>
-  <script src="firebase-auth.js?v=20260326s"></script>
-  <script src="quote-service.js?v=20260326s"></script>
-  <script src="content-service.js?v=20260326s"></script>
-  <script src="admin.js?v=20260326s"></script>
-  <script src="admin-content.js?v=20260326s"></script>
+  <script type="module" src="firebase-config.js?v=20260326s"></script>
+  <script type="module" src="firebase-auth.js?v=20260326s"></script>
+  <script type="module" src="quote-service.js?v=20260326s"></script>
+  <script type="module" src="content-service.js?v=20260326s"></script>
+  <script type="module" src="admin.js?v=20260326s"></script>
+  <script type="module" src="admin-content.js?v=20260326s"></script>
 </body>
 </html>

@@ -1,3 +1,7 @@
+import { assertSafeWrite } from './src/utils/envGuard.js';
+
+var ContentService;
+
 (function () {
   var PLACEHOLDER_PREFIX = 'REPLACE_WITH_';
   var DEFAULT_DESIGNS_COLLECTION = 'designCategories';
@@ -396,7 +400,11 @@
     return snapshot.docs.map(function (doc) {
       return normalizeTestimonial(doc.data());
     }).sort(function (a, b) {
-      return (a.sortOrder || 0) - (b.sortOrder || 0);
+      var byDate = String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+      if (byDate !== 0) {
+        return byDate;
+      }
+      return (b.sortOrder || 0) - (a.sortOrder || 0);
     });
   }
 
@@ -662,6 +670,8 @@
   }
 
   async function saveDesignCategory(category, files, coverIndex) {
+    assertSafeWrite();
+
     var base = normalizeDesignCategory(category);
     var existingDoc = await designsCollection().doc(base.id).get();
     var uploadedImages = await uploadGalleryFiles(base.slug, files || []);
@@ -691,6 +701,8 @@
   }
 
   async function updateDesignCategoryImages(id, images, coverIndex) {
+    assertSafeWrite();
+
     var current = await designsCollection().doc(id).get();
     if (!current.exists) {
       throw new Error('La categoria no existe.');
@@ -728,6 +740,8 @@
   }
 
   async function updateDesignCategoryOrder(categories) {
+    assertSafeWrite();
+
     var batch = init().firestore.batch();
     (Array.isArray(categories) ? categories : []).forEach(function (category, index) {
       var docRef = designsCollection().doc(category.id);
@@ -740,6 +754,8 @@
   }
 
   async function deleteDesignCategory(id) {
+    assertSafeWrite();
+
     var current = await designsCollection().doc(id).get();
     if (!current.exists) return;
 
@@ -749,6 +765,8 @@
   }
 
   async function saveRecentProject(project, files, coverIndex) {
+    assertSafeWrite();
+
     var base = normalizeRecentProject(project);
     var current = await recentProjectsCollection().doc(base.id).get();
     var existingItems = await getRecentProjects();
@@ -780,6 +798,8 @@
   }
 
   async function updateRecentProjectImages(id, images, coverIndex) {
+    assertSafeWrite();
+
     var current = await recentProjectsCollection().doc(id).get();
     if (!current.exists) {
       throw new Error('El proyecto no existe.');
@@ -814,6 +834,8 @@
   }
 
   async function deleteRecentProject(id) {
+    assertSafeWrite();
+
     var current = await recentProjectsCollection().doc(id).get();
     if (!current.exists) return;
 
@@ -823,6 +845,8 @@
   }
 
   async function saveTestimonial(item, file) {
+    assertSafeWrite();
+
     var base = normalizeTestimonial(item);
     var current = await testimonialsCollection().doc(base.id).get();
     var existingItems = await getTestimonials();
@@ -847,6 +871,8 @@
   }
 
   async function deleteTestimonial(id) {
+    assertSafeWrite();
+
     var current = await testimonialsCollection().doc(id).get();
     if (!current.exists) return;
 
@@ -856,6 +882,8 @@
   }
 
   async function saveSiteSettings(settings) {
+    assertSafeWrite();
+
     var next = normalizeSiteSettings(settings);
     await siteSettingsDoc().set(next);
     return next;
@@ -898,6 +926,8 @@
   }
 
   async function savePricingCard(card) {
+    assertSafeWrite();
+
     var base = normalizePricingCard(card);
     var current = await pricingCollection().doc(base.id).get();
     var previous = current.exists ? normalizePricingCard(current.data()) : null;
@@ -923,6 +953,8 @@
   }
 
   async function updatePricingCardOrder(cards) {
+    assertSafeWrite();
+
     var batch = init().firestore.batch();
     (Array.isArray(cards) ? cards : []).forEach(function (card, index) {
       var docRef = pricingCollection().doc(card.id);
@@ -935,6 +967,8 @@
   }
 
   async function deletePricingCard(id) {
+    assertSafeWrite();
+
     var current = await pricingCollection().doc(id).get();
     if (!current.exists) return;
 
@@ -967,7 +1001,7 @@
     });
   }
 
-  window.ContentService = {
+  ContentService = {
     init: init,
     getDesignCategories: getDesignCategories,
     getPricingCards: getPricingCards,
@@ -998,4 +1032,8 @@
     sanitizePricingDescriptionHtml: sanitizePricingDescriptionHtml,
     slugify: slugify
   };
+
+  window.ContentService = ContentService;
 })();
+
+export { ContentService };

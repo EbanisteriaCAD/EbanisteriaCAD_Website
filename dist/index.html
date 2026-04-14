@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ebanistería CAD | Cocinas, Closets y Remodelaciones en Puerto Rico</title>
+  <meta name="description" content="Ebanistería CAD diseña y fabrica cocinas, closets, centros TV, baños y remodelaciones a medida con acabados premium y servicio responsable." />
+  <meta property="og:title" content="Ebanistería CAD | Muebles y Ebanistería a Medida" />
+  <meta property="og:description" content="Creamos espacios funcionales y elegantes para tu hogar: cocinas, closets y más." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://burgosaxel.github.io/EbanisteriaCAD_Website/index.html" />
+  <meta property="og:image" content="https://burgosaxel.github.io/EbanisteriaCAD_Website/assets/index-hero.jpg" />
+  <script type="module" crossorigin src="/assets/index-DLHXxKeh.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CiC7w3IM.css">
+</head>
+<body>
+  <header class="site-topbar"></header>
+
+  <main>
+    <section class="hero container" aria-label="Hero principal">
+      <div>
+        <h1>Convertimos tus ideas en ebanistería de alto nivel</h1>
+        <p>Diseñamos y fabricamos cocinas, closets, centros de entretenimiento y remodelaciones con materiales de calidad, ejecución precisa y entrega responsable.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="quote.html">Solicitar Cotización</a>
+          <a class="btn btn-outline" href="designs.html">Ver Diseños</a>
+        </div>
+      </div>
+    </section>
+
+      <section id="recentProjectsSection" class="section">
+      <div class="container">
+        <h2 class="section-title">Por Qué Elegirnos</h2>
+        <p class="section-subtitle">Más de una década en la industria, con enfoque en detalle, tiempos y comunicación.</p>
+        <div class="grid grid-4">
+          <article class="card feature-card">
+            <h3>Diseño Personalizado</h3>
+            <p>Propuestas ajustadas al espacio, estilo y presupuesto de cada cliente.</p>
+          </article>
+          <article class="card feature-card">
+            <h3>Materiales de Calidad</h3>
+            <p>Selección de herrajes, maderas y terminaciones con durabilidad comprobada.</p>
+          </article>
+          <article class="card feature-card">
+            <h3>Instalación Profesional</h3>
+            <p>Equipo capacitado para una entrega limpia y exacta en cada proyecto.</p>
+          </article>
+          <article class="card feature-card">
+            <h3>Responsabilidad Real</h3>
+            <p>Cumplimos con lo acordado y mantenemos comunicación durante todo el proceso.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+      <section id="testimonialsSection" class="section">
+      <div class="container">
+        <h2 class="section-title">Nuestro Proceso</h2>
+        <p class="section-subtitle">Un flujo claro para llevar tu proyecto de la idea a la instalación final.</p>
+        <div class="grid grid-4">
+          <article class="card process-card">
+            <span class="process-number">1</span>
+            <h3>Consulta</h3>
+            <p>Evaluamos tus necesidades, medidas y estilo deseado.</p>
+          </article>
+          <article class="card process-card">
+            <span class="process-number">2</span>
+            <h3>Diseño & Propuesta</h3>
+            <p>Presentamos distribución, materiales y presupuesto inicial.</p>
+          </article>
+          <article class="card process-card">
+            <span class="process-number">3</span>
+            <h3>Fabricación</h3>
+            <p>Construimos cada pieza con control de calidad en taller.</p>
+          </article>
+          <article class="card process-card">
+            <span class="process-number">4</span>
+            <h3>Instalación Final</h3>
+            <p>Montaje profesional y revisión final contigo en sitio.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Proyectos Recientes</h2>
+        <p class="section-subtitle">Algunos estilos que nuestros clientes han solicitado recientemente.</p>
+        <p id="recentProjectsStatus" class="section-subtitle" hidden></p>
+        <div id="recentProjectsGrid" class="grid grid-3"></div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2 class="section-title">Testimonios</h2>
+        <p class="section-subtitle">Opiniones de clientes satisfechos con nuestro trabajo.</p>
+        <p id="testimonialsStatus" class="section-subtitle" hidden></p>
+        <div id="testimonialsGrid" class="grid grid-3"></div>
+        <div class="section-actions">
+          <button id="testimonialsMoreBtn" class="btn btn-outline" type="button" hidden>Ver mas</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="publicGalleryModal" class="public-gallery-modal" hidden>
+    <div class="public-gallery-backdrop" data-gallery-close="true"></div>
+    <div class="public-gallery-card" role="dialog" aria-modal="true" aria-labelledby="publicGalleryTitle">
+      <div class="public-gallery-head">
+        <div>
+          <h3 id="publicGalleryTitle">Galería</h3>
+          <p id="publicGalleryMeta" class="public-gallery-meta"></p>
+        </div>
+        <button id="publicGalleryClose" class="admin-icon-btn" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div id="publicGalleryStage" class="public-gallery-stage">
+        <button id="publicGalleryPrev" class="public-gallery-nav prev" type="button" aria-label="Imagen anterior"><</button>
+        <img id="publicGalleryImage" class="public-gallery-image" alt="" />
+        <button id="publicGalleryNext" class="public-gallery-nav next" type="button" aria-label="Imagen siguiente">></button>
+      </div>
+      <div id="publicGalleryThumbs" class="public-gallery-thumbs"></div>
+    </div>
+  </div>
+
+  <footer class="site-footer"></footer>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+</body>
+</html>

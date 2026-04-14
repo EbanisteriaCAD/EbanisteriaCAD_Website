@@ -1,5 +1,6 @@
+import { ContentService } from './content-service.js';
+
 (function () {
-  var ContentService = window.ContentService;
   var testimonialsExpanded = false;
   var page = (window.location.pathname.split('/').pop() || '').toLowerCase();
   var galleryState = {
@@ -236,6 +237,7 @@
   function renderPricing(cards) {
     var grid = byId('pricingGrid');
     var paymentsWrap = byId('paymentMethodsWrap');
+    var contentService = ContentService;
     if (!grid) return;
 
     if (!cards.length) {
@@ -250,8 +252,8 @@
     var pricingCardsHtml = cards.map(function (item) {
       var buttonClass = item.highlighted ? 'btn btn-primary' : 'btn btn-outline';
       var quoteHref = item.quoteCategory ? ('quote.html?cat=' + encodeURIComponent(item.quoteCategory)) : 'quote.html';
-      var richDescription = ContentService && typeof ContentService.sanitizePricingDescriptionHtml === 'function'
-        ? ContentService.sanitizePricingDescriptionHtml(item.description)
+      var richDescription = contentService && typeof contentService.sanitizePricingDescriptionHtml === 'function'
+        ? contentService.sanitizePricingDescriptionHtml(item.description)
         : '';
 
       return (
@@ -345,7 +347,7 @@
     }
 
     setStatus('testimonialsStatus', '');
-    var visibleItems = testimonialsExpanded ? items : items.slice(0, 9);
+    var visibleItems = testimonialsExpanded ? items : items.slice(0, 3);
 
     grid.innerHTML = visibleItems.map(function (item) {
       var imageUrl = item.imageUrl || 'assets/index-hero.jpg';
@@ -360,7 +362,7 @@
     }).join('');
 
     if (moreBtn) {
-      moreBtn.hidden = items.length <= 9;
+      moreBtn.hidden = items.length <= 3;
       moreBtn.textContent = testimonialsExpanded ? 'Ver menos' : 'Ver mas';
       moreBtn.onclick = function () {
         testimonialsExpanded = !testimonialsExpanded;
@@ -381,27 +383,35 @@
     };
   }
 
-  async function init() {
-    if (!ContentService) return;
+  async function init(attempt) {
+    var contentService = ContentService;
+    if (!contentService) {
+      if ((attempt || 0) < 5) {
+        window.setTimeout(function () {
+          init((attempt || 0) + 1);
+        }, 50);
+      }
+      return;
+    }
 
     try {
       if (page === 'designs.html') {
         wireGallery();
         setStatus('designsStatus', 'Cargando diseños...');
-        renderDesigns(await ContentService.getDesignCategories());
+        renderDesigns(await contentService.getDesignCategories());
       }
 
       if (page === 'pricing.html') {
         setStatus('pricingStatus', 'Cargando precios...');
-        renderPricing(await ContentService.getPricingCards());
+        renderPricing(await contentService.getPricingCards());
       }
 
       if (page === 'index.html' || page === '') {
         wireGallery();
         setStatus('recentProjectsStatus', 'Cargando proyectos recientes...');
-        renderRecentProjects(await ContentService.getRecentProjects());
+        renderRecentProjects(await contentService.getRecentProjects());
         setStatus('testimonialsStatus', 'Cargando testimonios...');
-        renderTestimonials(await ContentService.getTestimonials());
+        renderTestimonials(await contentService.getTestimonials());
       }
     } catch (error) {
       console.error('Content page load failed:', error);
@@ -418,5 +428,5 @@
     }
   }
 
-  init();
+  init(0);
 })();

@@ -1,3 +1,5 @@
+var FirebaseAdminAuth;
+
 (function () {
   var PLACEHOLDER_PREFIX = 'REPLACE_WITH_';
   var REQUIRED_KEYS = [
@@ -209,7 +211,7 @@
     return state.auth ? state.auth.currentUser : null;
   }
 
-  window.FirebaseAdminAuth = {
+  FirebaseAdminAuth = {
     init: init,
     getIssues: getIssues,
     getAccessDeniedMessage: getAccessDeniedMessage,
@@ -219,4 +221,8 @@
     signOut: signOut,
     getCurrentUser: getCurrentUser
   };
+
+  window.FirebaseAdminAuth = FirebaseAdminAuth;
 })();
+
+export { FirebaseAdminAuth };

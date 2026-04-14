@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Solicitudes Admin | Ebanistería CAD</title>
-  <meta name="description" content="Gestión de solicitudes y cotizaciones." />
+  <title>Clientes y Proyectos Admin | Ebanistería CAD</title>
+  <meta name="description" content="Gestión de clientes, proyectos y cotizaciones." />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="admin-body">
@@ -47,7 +47,7 @@
       <aside id="adminSidebar" class="admin-sidebar" aria-label="Navegación de administración">
         <nav>
           <a href="admin.html" class="admin-nav-link">Resumen</a>
-          <a href="admin-requests.html" class="admin-nav-link">Solicitudes (Cotizaciones)</a>
+          <a href="admin-requests.html" class="admin-nav-link">Clientes / Proyectos</a>
           <a href="admin-designs.html" class="admin-nav-link">Diseños / Galería</a>
           <a href="admin-projects.html" class="admin-nav-link">Proyectos Recientes</a>
           <a href="admin-testimonials.html" class="admin-nav-link">Testimonios</a>
@@ -58,17 +58,18 @@
 
       <main class="admin-main">
         <section class="admin-section">
-          <h1 class="section-title">Solicitudes (Cotizaciones)</h1>
-          <p class="section-subtitle">Busca, filtra y gestiona el estado de tus solicitudes.</p>
+          <h1 class="section-title">Clientes / Proyectos</h1>
+          <p class="section-subtitle">Busca, filtra y gestiona el estado de tus proyectos y cotizaciones.</p>
 
           <div class="card">
             <div class="admin-inline-actions" style="margin-bottom: 1rem;">
-              <button id="toggleManualQuoteBtn" class="btn btn-primary" type="button">Crear Cotizacion Manual</button>
+              <button id="toggleManualQuoteBtn" class="btn btn-primary" type="button">Crear Proyecto Manual</button>
+              <button id="openExportProjectsBtn" class="btn btn-outline" type="button">Exportar Clientes</button>
             </div>
 
             <div id="manualQuoteCard" class="admin-manual-quote-card" hidden>
-              <h3>Cotizacion Manual</h3>
-              <p class="section-subtitle">Crea una solicitud desde el panel administrativo con la misma información que llena el cliente.</p>
+              <h3 id="manualQuoteCardTitle">Proyecto Manual</h3>
+              <p id="manualQuoteCardSubtitle" class="section-subtitle">Crea un proyecto o registro de cliente desde el panel administrativo con la misma base de datos que usan las cotizaciones.</p>
 
               <form id="manualQuoteForm" class="admin-content-form">
                 <div class="grid grid-2">
@@ -113,6 +114,10 @@
                     </select>
                   </div>
                   <div>
+                    <label for="manualQuoteProjectTitle">Titulo del proyecto</label>
+                    <input id="manualQuoteProjectTitle" type="text" />
+                  </div>
+                  <div>
                     <label for="manualQuoteMeasures">Medidas aproximadas</label>
                     <input id="manualQuoteMeasures" type="text" />
                   </div>
@@ -138,6 +143,14 @@
                       <option value="new">Nuevo</option>
                       <option value="in_progress">En Proceso</option>
                       <option value="completed">Completado</option>
+                      <option value="archived">Archivado</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="manualQuoteType">Tipo de registro</label>
+                    <select id="manualQuoteType">
+                      <option value="project">Proyecto</option>
+                      <option value="quote">Cotización</option>
                     </select>
                   </div>
                 </div>
@@ -145,7 +158,7 @@
                 <div>
                   <label for="manualQuoteImages">Fotos del proyecto</label>
                   <input id="manualQuoteImages" type="file" accept="image/*" multiple />
-                  <p class="field-help">Puedes subir hasta 10 fotos para esta cotización manual.</p>
+                  <p class="field-help">Puedes subir hasta 10 fotos para este proyecto manual.</p>
                   <div id="manualQuoteImagesPreview" class="quote-image-preview" hidden></div>
                 </div>
 
@@ -155,7 +168,7 @@
                 </div>
 
                 <div class="admin-inline-actions">
-                  <button class="btn btn-primary" type="submit">Guardar Cotización</button>
+                  <button id="manualQuoteSubmitBtn" class="btn btn-primary" type="submit">Guardar Proyecto</button>
                   <button id="cancelManualQuoteBtn" class="btn btn-outline" type="button">Cancelar</button>
                   <p id="manualQuoteStatusMessage" class="form-status" role="status" aria-live="polite"></p>
                 </div>
@@ -163,19 +176,20 @@
             </div>
 
             <div class="admin-toolbar">
-              <input id="searchInput" type="search" placeholder="Buscar por nombre, email, teléfono, dirección o categoría" />
+              <input id="searchInput" type="search" placeholder="Buscar por cliente, email, teléfono, dirección o categoría" />
               <select id="statusFilter" aria-label="Filtrar por estado">
                 <option value="Todos">Todos</option>
                 <option value="Nuevo">Nuevo</option>
                 <option value="En Proceso">En Proceso</option>
                 <option value="Completado">Completado</option>
+                <option value="Archivado">Archivado</option>
               </select>
             </div>
 
-            <div id="loadingState" class="admin-loading" hidden>Cargando solicitudes...</div>
+            <div id="loadingState" class="admin-loading" hidden>Cargando registros...</div>
             <div id="emptyState" class="admin-empty" hidden>
-              <p>No hay solicitudes todavía.</p>
-              <button id="openManualQuoteEmptyBtn" class="btn btn-outline" type="button">Crear Cotizacion Manual</button>
+              <p>No hay clientes o proyectos todavía.</p>
+              <button id="openManualQuoteEmptyBtn" class="btn btn-outline" type="button">Crear Proyecto Manual</button>
             </div>
 
             <div class="admin-table-wrap" id="tableWrap">
@@ -183,7 +197,7 @@
                 <thead>
                   <tr>
                     <th>Fecha</th>
-                    <th>Nombre</th>
+                    <th>Cliente</th>
                     <th>Categoría</th>
                     <th>Teléfono</th>
                     <th>Email</th>
@@ -194,6 +208,16 @@
                 <tbody id="requestsTbody"></tbody>
               </table>
             </div>
+
+            <section class="admin-audit-panel">
+              <div class="admin-detail-section-head">
+                <h3>Recent Audit Activity</h3>
+                <p class="section-subtitle">Shared delete and admin activity events visible across accounts.</p>
+              </div>
+              <div id="auditLoadingState" class="admin-loading" hidden>Loading audit activity...</div>
+              <div id="auditEmptyState" class="admin-list-empty" hidden>No audit events yet.</div>
+              <div id="auditEventsList" class="admin-audit-list"></div>
+            </section>
           </div>
         </section>
       </main>
@@ -206,10 +230,47 @@
     <div class="admin-modal-backdrop" data-close-modal="true"></div>
     <div class="admin-modal-card" role="dialog" aria-modal="true" aria-labelledby="requestModalTitle">
       <div class="admin-modal-head">
-        <h3 id="requestModalTitle">Detalle de Solicitud</h3>
+        <h3 id="requestModalTitle">Detalle de Proyecto</h3>
         <button id="closeModalBtn" class="admin-icon-btn" type="button" aria-label="Cerrar">✕</button>
       </div>
       <div id="modalContent" class="admin-modal-body"></div>
+    </div>
+  </div>
+
+  <div id="exportModal" class="admin-modal" hidden>
+    <div class="admin-modal-backdrop" data-close-export-modal="true"></div>
+    <div class="admin-modal-card admin-modal-card-compact" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
+      <div class="admin-modal-head">
+        <h3 id="exportModalTitle">Exportar Clientes / Proyectos</h3>
+        <button id="closeExportModalBtn" class="admin-icon-btn" type="button" aria-label="Cerrar">✕</button>
+      </div>
+      <div class="admin-modal-body">
+        <div class="admin-detail-stack">
+          <p class="section-subtitle">Descarga la información cargada del panel en el formato que necesites.</p>
+          <div class="grid grid-2">
+            <div>
+              <label for="exportFormat">Formato</label>
+              <select id="exportFormat">
+                <option value="csv">CSV</option>
+                <option value="xlsx">XLSX</option>
+                <option value="pdf">PDF</option>
+                <option value="doc">Word</option>
+              </select>
+            </div>
+            <div>
+              <label for="exportScope">Registros</label>
+              <select id="exportScope">
+                <option value="all">Todos los registros cargados</option>
+                <option value="filtered">Solo resultados filtrados</option>
+              </select>
+            </div>
+          </div>
+          <div class="admin-inline-actions">
+            <button id="downloadProjectsExportBtn" class="btn btn-primary" type="button">Descargar</button>
+            <button id="cancelProjectsExportBtn" class="btn btn-outline" type="button">Cancelar</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -217,11 +278,13 @@
   <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-storage-compat.js"></script>
-  <script src="firebase-config.js?v=20260326s"></script>
-  <script src="firebase-auth.js?v=20260326s"></script>
-  <script src="quote-service.js?v=20260326s"></script>
-  <script src="content-service.js?v=20260326s"></script>
-  <script src="admin.js?v=20260326s"></script>
-  <script src="admin-content.js?v=20260326s"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script type="module" src="firebase-config.js?v=20260326s"></script>
+  <script type="module" src="firebase-auth.js?v=20260326s"></script>
+  <script type="module" src="quote-service.js?v=20260326s"></script>
+  <script type="module" src="content-service.js?v=20260326s"></script>
+  <script type="module" src="admin.js?v=20260326s"></script>
+  <script type="module" src="admin-content.js?v=20260326s"></script>
 </body>
 </html>

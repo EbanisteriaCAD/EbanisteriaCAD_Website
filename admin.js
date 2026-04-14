@@ -1,12 +1,15 @@
+import { mountEnvironmentBanner } from './src/utils/envGuard.js';
+import { QuoteService } from './quote-service.js';
+import { FirebaseAdminAuth } from './firebase-auth.js';
+
 (function () {
   var SIDEBAR_OPEN_CLASS = 'admin-sidebar-open';
-  var QuoteService = window.QuoteService;
-  var FirebaseAdminAuth = window.FirebaseAdminAuth;
 
   var STATUS_META = {
     new: { label: 'Nuevo', css: 'status-nuevo' },
     in_progress: { label: 'En Proceso', css: 'status-en-proceso' },
-    completed: { label: 'Completado', css: 'status-completado' }
+    completed: { label: 'Completado', css: 'status-completado' },
+    archived: { label: 'Archivado', css: 'status-completado' }
   };
 
   var state = {
@@ -18,7 +21,12 @@
     clockTimer: null,
     uiReady: false,
     quotes: [],
-    quotesUnsubscribe: null
+    quotesUnsubscribe: null,
+    auditEvents: [],
+    auditEventsUnsubscribe: null,
+    currentModalProjectId: null,
+    manualFormMode: 'create',
+    editingProjectId: null
   };
 
   function byId(id) {
@@ -46,6 +54,7 @@
     if (filter === 'Nuevo') return 'new';
     if (filter === 'En Proceso') return 'in_progress';
     if (filter === 'Completado') return 'completed';
+    if (filter === 'Archivado') return 'archived';
     return 'all';
   }
 
@@ -59,7 +68,7 @@
 
       if (!q) return true;
 
-      return [item.name, item.email, item.category, item.phone, item.id, item.address, item.addressLine, item.city, item.stateRegion, item.postalCode]
+      return [item.name, item.email, item.category, item.projectTitle, item.phone, item.id, item.address, item.addressLine, item.city, item.stateRegion, item.zipCode, item.postalCode]
         .some(function (v) {
           return normalize(v).indexOf(q) !== -1;
         });
@@ -108,12 +117,61 @@
 
     return (
       '<div class="admin-actions-cell">' +
-      '<button class="btn btn-outline admin-mini" data-action="view" data-id="' + id + '">Ver</button>' +
-      '<button class="btn btn-outline admin-mini" data-action="process" data-id="' + id + '"' + (disableProcess ? ' disabled' : '') + '>En Proceso</button>' +
-      '<button class="btn btn-primary admin-mini" data-action="done" data-id="' + id + '"' + (disableDone ? ' disabled' : '') + '>Completar</button>' +
-      '<button class="btn btn-outline admin-mini danger" data-action="delete" data-id="' + id + '">Eliminar</button>' +
+      '<select class="admin-actions-select" data-actions-menu="true" data-id="' + id + '" aria-label="Acciones del proyecto">' +
+      '<option value="" selected disabled hidden>Acciones</option>' +
+      '<option value="view">Ver</option>' +
+      '<option value="edit">Editar</option>' +
+      '<option value="process"' + (disableProcess ? ' disabled' : '') + '>En Proceso</option>' +
+      '<option value="done"' + (disableDone ? ' disabled' : '') + '>Completar</option>' +
+      '<option value="delete">Eliminar</option>' +
+      '</select>' +
       '</div>'
     );
+  }
+
+  async function runRowAction(action, id) {
+    if (!action || !id) return;
+
+    if (action === 'view') {
+      openRequestModal(findQuote(id));
+      return;
+    }
+
+    if (action === 'edit') {
+      closeModal();
+      openManualQuoteForm('edit', findQuote(id));
+      return;
+    }
+
+    if (!QuoteService) {
+      showToast('error', 'QuoteService no esta disponible.');
+      return;
+    }
+
+    try {
+      if (action === 'process') {
+        await (QuoteService.updateProjectStatus || QuoteService.updateQuoteStatus)(id, 'in_progress');
+        showToast('success', 'Estado actualizado a En Proceso.');
+        return;
+      }
+
+      if (action === 'done') {
+        await (QuoteService.updateProjectStatus || QuoteService.updateQuoteStatus)(id, 'completed');
+        showToast('success', 'Proyecto marcado como completado.');
+        return;
+      }
+
+      if (action === 'delete') {
+        var req = findQuote(id);
+        if (!req) return;
+        if (!window.confirm('Eliminar el registro de ' + req.name + '?')) return;
+        await (QuoteService.deleteProject || QuoteService.deleteQuote)(id);
+        closeModal();
+        showToast('info', 'Registro eliminado.');
+      }
+    } catch (error) {
+      showToast('error', 'No se pudo actualizar el registro.');
+    }
   }
 
   function setLoading(value) {
@@ -171,6 +229,56 @@
     calcStats();
   }
 
+  function auditTypeLabel(type) {
+    if (type === 'project_deleted') return 'Deleted project';
+    if (type === 'status_changed') return 'Status changed';
+    if (type === 'note_added') return 'Note added';
+    if (type === 'note_deleted') return 'Note deleted';
+    if (type === 'attachment_added') return 'Attachment added';
+    if (type === 'attachment_deleted') return 'Attachment deleted';
+    if (type === 'attachment_uploaded') return 'Files uploaded';
+    return 'Audit event';
+  }
+
+  function renderAuditEvents() {
+    var list = byId('auditEventsList');
+    var empty = byId('auditEmptyState');
+    var loading = byId('auditLoadingState');
+    if (!list || !empty || !loading) return;
+
+    if (state.loading && !state.auditEvents.length) {
+      loading.hidden = false;
+      empty.hidden = true;
+      list.innerHTML = '';
+      return;
+    }
+
+    loading.hidden = true;
+
+    if (!state.auditEvents.length) {
+      list.innerHTML = '';
+      empty.hidden = false;
+      return;
+    }
+
+    empty.hidden = true;
+    list.innerHTML = state.auditEvents.map(function (event) {
+      return (
+        '<article class="admin-audit-item">' +
+        '<div class="admin-audit-main">' +
+        '<div class="admin-file-meta">' +
+        '<span class="admin-chip">' + escapeHtml(auditTypeLabel(event.type)) + '</span>' +
+        '<span>' + formatDateMeta(event.createdAt) + '</span>' +
+        '<span>' + formatActor(event.createdBy) + '</span>' +
+        '</div>' +
+        '<strong>' + escapeHtml(event.projectTitle || event.clientName || event.projectId || 'Project record') + '</strong>' +
+        '<div class="admin-note-meta">Client: ' + escapeHtml(event.clientName || '-') + ' · Status: ' + escapeHtml(event.status || '-') + '</div>' +
+        '</div>' +
+        '</article>'
+      );
+    }).join('');
+  }
+
   function showToast(type, message) {
     var wrap = byId('toastContainer');
     if (!wrap) return;
@@ -196,25 +304,370 @@
     return '<div><dt>' + escapeHtml(label) + '</dt><dd>' + escapeHtml(value) + '</dd></div>';
   }
 
-  function renderAttachments(request) {
-    var attachments = request && Array.isArray(request.attachments) ? request.attachments : [];
-    if (!attachments.length) {
-      return '';
+  function formatActor(value) {
+    return escapeHtml(value || 'Admin');
+  }
+
+  function formatDateMeta(iso) {
+    var formatted = formatDate(iso);
+    return formatted === '-' ? 'Sin fecha' : formatted;
+  }
+
+  function getCurrentAdminLabel() {
+    return (state.currentUser && (state.currentUser.displayName || state.currentUser.email)) || 'Admin';
+  }
+
+  function getCurrentModalProject() {
+    return findQuote(state.currentModalProjectId);
+  }
+
+  function formatExportDate(iso) {
+    var d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toISOString();
+  }
+
+  function csvEscape(value) {
+    var text = String(value == null ? '' : value);
+    if (/[",\n]/.test(text)) {
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+    return text;
+  }
+
+  function getExportRecords(scope) {
+    return (scope === 'filtered' ? getFilteredQuotes() : state.quotes.slice()).slice();
+  }
+
+  function buildExportRows(records) {
+    return records.map(function (item) {
+      return {
+        id: item.id || '',
+        type: item.type || '',
+        status: item.status || '',
+        createdAt: formatExportDate(item.createdAt),
+        updatedAt: formatExportDate(item.updatedAt),
+        name: item.name || '',
+        phone: item.phone || '',
+        email: item.email || '',
+        address: item.address || item.addressLine || '',
+        city: item.city || '',
+        stateRegion: item.stateRegion || '',
+        zipCode: item.zipCode || item.postalCode || '',
+        category: item.category || '',
+        projectTitle: item.projectTitle || '',
+        measures: item.measures || '',
+        material: item.material || '',
+        budget: item.budget || '',
+        message: item.message || '',
+        notesCount: Array.isArray(item.notes) ? item.notes.length : 0,
+        attachmentsCount: Array.isArray(item.attachments) ? item.attachments.length : 0,
+        historyCount: Array.isArray(item.history) ? item.history.length : 0,
+        source: item.source || ''
+      };
+    });
+  }
+
+  function downloadBlob(filename, mimeType, content) {
+    var blob = content instanceof Blob ? content : new Blob([content], { type: mimeType });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  function getExportFileBaseName(scope) {
+    var stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    return 'clientes-proyectos-' + (scope === 'filtered' ? 'filtrados-' : 'todos-') + stamp;
+  }
+
+  function exportAsCsv(records, scope) {
+    var rows = buildExportRows(records);
+    var headers = Object.keys(rows[0] || {
+      id: '', type: '', status: '', createdAt: '', updatedAt: '', name: '', phone: '', email: '', address: '', city: '', stateRegion: '', zipCode: '', category: '', projectTitle: '', measures: '', material: '', budget: '', message: '', notesCount: '', attachmentsCount: '', historyCount: '', source: ''
+    });
+    var lines = [headers.join(',')].concat(rows.map(function (row) {
+      return headers.map(function (header) {
+        return csvEscape(row[header]);
+      }).join(',');
+    }));
+    downloadBlob(getExportFileBaseName(scope) + '.csv', 'text/csv;charset=utf-8', '\uFEFF' + lines.join('\n'));
+  }
+
+  function exportAsExcel(records, scope) {
+    var rows = buildExportRows(records);
+    var xlsxApi = window.XLSX;
+    if (!xlsxApi || !xlsxApi.utils || typeof xlsxApi.writeFile !== 'function') {
+      throw new Error('Excel export is not available right now.');
     }
 
+    var worksheet = xlsxApi.utils.json_to_sheet(rows);
+    var workbook = xlsxApi.utils.book_new();
+    xlsxApi.utils.book_append_sheet(workbook, worksheet, 'Clientes');
+    xlsxApi.writeFile(workbook, getExportFileBaseName(scope) + '.xlsx');
+  }
+
+  function buildExportHtml(records, title) {
+    var rows = buildExportRows(records);
+    var headers = Object.keys(rows[0] || {
+      id: '', type: '', status: '', createdAt: '', updatedAt: '', name: '', phone: '', email: '', address: '', city: '', stateRegion: '', zipCode: '', category: '', projectTitle: '', measures: '', material: '', budget: '', message: '', notesCount: '', attachmentsCount: '', historyCount: '', source: ''
+    });
+
+    return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + escapeHtml(title) + '</title>' +
+      '<style>body{font-family:Segoe UI,Tahoma,sans-serif;padding:24px;color:#1a1d24}h1{margin:0 0 16px}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #d8dde6;padding:8px;text-align:left;vertical-align:top}th{background:#f5f6fa}tr:nth-child(even){background:#fafbfc}</style>' +
+      '</head><body><h1>' + escapeHtml(title) + '</h1><table><thead><tr>' + headers.map(function (header) {
+        return '<th>' + escapeHtml(header) + '</th>';
+      }).join('') + '</tr></thead><tbody>' + rows.map(function (row) {
+        return '<tr>' + headers.map(function (header) {
+          return '<td>' + escapeHtml(row[header]) + '</td>';
+        }).join('') + '</tr>';
+      }).join('') + '</tbody></table></body></html>';
+  }
+
+  function exportAsWord(records, scope) {
+    var title = 'Clientes / Proyectos';
+    var html = buildExportHtml(records, title);
+    downloadBlob(getExportFileBaseName(scope) + '.doc', 'application/msword;charset=utf-8', html);
+  }
+
+  function exportAsPdf(records, scope) {
+    var jsPdfApi = window.jspdf;
+    if (!jsPdfApi || typeof jsPdfApi.jsPDF !== 'function') {
+      throw new Error('PDF export is not available right now.');
+    }
+
+    var rows = buildExportRows(records);
+    var headers = ['ID', 'Cliente', 'Categoria', 'Telefono', 'Email', 'Estado', 'Tipo', 'Presupuesto'];
+    var doc = new jsPdfApi.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+    var y = 40;
+
+    doc.setFontSize(18);
+    doc.text('Clientes / Proyectos', 40, y);
+    y += 24;
+    doc.setFontSize(10);
+    doc.text('Exportado: ' + new Date().toLocaleString('es-PR'), 40, y);
+    y += 24;
+
+    doc.setFontSize(9);
+    doc.text(headers.join(' | '), 40, y);
+    y += 18;
+
+    rows.forEach(function (row) {
+      var line = [
+        row.id,
+        row.name,
+        row.category,
+        row.phone,
+        row.email,
+        row.status,
+        row.type,
+        row.budget
+      ].join(' | ');
+
+      if (y > 540) {
+        doc.addPage();
+        y = 40;
+      }
+
+      var wrapped = doc.splitTextToSize(line, 760);
+      doc.text(wrapped, 40, y);
+      y += wrapped.length * 12 + 6;
+    });
+
+    doc.save(getExportFileBaseName(scope) + '.pdf');
+  }
+
+  function openExportModal() {
+    var modal = byId('exportModal');
+    if (!modal) return;
+    modal.hidden = false;
+    document.body.classList.add('admin-modal-open');
+  }
+
+  function closeExportModal() {
+    var modal = byId('exportModal');
+    if (!modal) return;
+    modal.hidden = true;
+    if (byId('requestModal') && byId('requestModal').hidden) {
+      document.body.classList.remove('admin-modal-open');
+    }
+  }
+
+  function handleProjectsExport() {
+    var formatInput = byId('exportFormat');
+    var scopeInput = byId('exportScope');
+    var format = formatInput ? String(formatInput.value || 'csv') : 'csv';
+    var scope = scopeInput ? String(scopeInput.value || 'all') : 'all';
+    var records = getExportRecords(scope);
+
+    if (!records.length) {
+      showToast('info', 'No records available to export.');
+      return;
+    }
+
+    if (format === 'csv') {
+      exportAsCsv(records, scope);
+    } else if (format === 'xlsx') {
+      exportAsExcel(records, scope);
+    } else if (format === 'doc') {
+      exportAsWord(records, scope);
+    } else if (format === 'pdf') {
+      exportAsPdf(records, scope);
+    } else {
+      throw new Error('Unsupported export format.');
+    }
+
+    closeExportModal();
+    showToast('success', 'Export downloaded successfully.');
+  }
+
+  function renderInfoSection(title, content) {
     return (
-      '<div class="admin-attachments">' +
-      '<h4>Fotos del proyecto</h4>' +
-      '<div class="admin-attachment-grid">' +
-      attachments.map(function (url, index) {
-        var safeUrl = escapeHtml(url);
-        return (
-          '<a class="admin-attachment-link" href="' + safeUrl + '" target="_blank" rel="noopener noreferrer">' +
-          '<img src="' + safeUrl + '" alt="Foto del proyecto ' + String(index + 1) + '" />' +
-          '</a>'
-        );
-      }).join('') +
+      '<section class="admin-detail-section">' +
+      '<div class="admin-detail-section-head">' +
+      '<h4>' + escapeHtml(title) + '</h4>' +
       '</div>' +
+      content +
+      '</section>'
+    );
+  }
+
+  function renderNotesSection(request) {
+    var notes = request && Array.isArray(request.notes) ? request.notes : [];
+
+    return renderInfoSection('Notas Internas',
+      '<div class="admin-detail-stack">' +
+      '<div class="admin-inline-form">' +
+      '<textarea id="projectNoteText" rows="4" placeholder="Escribe una nota interna para este proyecto"></textarea>' +
+      '<button id="addProjectNoteBtn" class="btn btn-primary" type="button">Agregar Nota</button>' +
+      '</div>' +
+      '<div class="admin-note-list">' +
+      (notes.length ? notes.map(function (note) {
+        return (
+          '<article class="admin-note-item">' +
+          '<div class="admin-note-copy">' + escapeHtml(note.text) + '</div>' +
+          '<div class="admin-note-meta">' + formatDateMeta(note.createdAt) + ' · ' + formatActor(note.createdBy) + '</div>' +
+          '<button class="btn btn-outline admin-mini danger" type="button" data-note-delete="' + escapeHtml(note.id) + '">Eliminar</button>' +
+          '</article>'
+        );
+      }).join('') : '<p class="admin-list-empty">Todavia no hay notas internas.</p>') +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  function attachmentCategoryLabel(category) {
+    if (category === 'quote') return 'Cotizacion';
+    if (category === 'invoice') return 'Factura';
+    if (category === 'receipt') return 'Recibo';
+    if (category === 'photo') return 'Foto';
+    return 'Otro';
+  }
+
+  function renderAttachmentsSection(request) {
+    var attachments = request && Array.isArray(request.attachments) ? request.attachments : [];
+
+    return renderInfoSection('Archivos / Adjuntos',
+      '<div class="admin-detail-stack">' +
+      '<div class="admin-inline-form admin-inline-form-attachments">' +
+      '<input id="projectAttachmentName" type="text" placeholder="Nombre del archivo" />' +
+      '<select id="projectAttachmentCategory">' +
+      '<option value="photo">Foto del proyecto</option>' +
+      '<option value="quote">Cotizacion / Propuesta</option>' +
+      '<option value="invoice">Factura</option>' +
+      '<option value="receipt">Recibo</option>' +
+      '<option value="other">Otro documento</option>' +
+      '</select>' +
+      '<input id="projectAttachmentUrl" type="url" placeholder="Optional reference URL" />' +
+      '<input id="projectAttachmentFiles" type="file" multiple />' +
+      '<button id="addProjectAttachmentBtn" class="btn btn-primary" type="button">Upload Photos/Documents</button>' +
+      '</div>' +
+      '<div class="admin-file-list">' +
+      (attachments.length ? attachments.map(function (attachment) {
+        var safeUrl = escapeHtml(attachment.url || '#');
+        var isPhoto = attachment.category === 'photo' || String(attachment.type || '').indexOf('image/') === 0;
+        return (
+          '<article class="admin-file-item">' +
+          (isPhoto ? '<a class="admin-file-preview" href="' + safeUrl + '" target="_blank" rel="noopener noreferrer"><img src="' + safeUrl + '" alt="' + escapeHtml(attachment.name || 'Imagen del proyecto') + '" /></a>' : '') +
+          '<div class="admin-file-main">' +
+          '<a class="admin-file-link" href="' + safeUrl + '" target="_blank" rel="noopener noreferrer">' + escapeHtml(attachment.name || 'Archivo') + '</a>' +
+          '<div class="admin-file-meta">' +
+          '<span class="admin-chip">' + escapeHtml(attachmentCategoryLabel(attachment.category)) + '</span>' +
+          '<span>' + formatDateMeta(attachment.createdAt) + '</span>' +
+          '<span>' + formatActor(attachment.createdBy) + '</span>' +
+          '</div>' +
+          '</div>' +
+          '<button class="btn btn-outline admin-mini danger" type="button" data-attachment-delete="' + escapeHtml(attachment.id) + '">Eliminar</button>' +
+          '</article>'
+        );
+      }).join('') : '<p class="admin-list-empty">Todavia no hay adjuntos internos.</p>') +
+      '</div>' +
+      '</div>'
+    );
+  }
+
+  function renderHistorySection(request) {
+    var history = request && Array.isArray(request.history) ? request.history.slice() : [];
+    history.sort(function (a, b) {
+      return String(b && b.createdAt || '').localeCompare(String(a && a.createdAt || ''));
+    });
+    return renderInfoSection('Historial',
+      history.length
+        ? '<div class="admin-history-list">' + history.map(function (item) {
+          var entry = item && typeof item === 'object' ? item : { description: String(item || '') };
+          return (
+            '<div class="admin-history-item">' +
+            '<div class="admin-file-meta"><span class="admin-chip">' + escapeHtml(String(entry.action || 'update')) + '</span></div>' +
+            '<div class="admin-note-copy">' + escapeHtml(entry.description || '') + '</div>' +
+            '<div class="admin-note-meta">' + formatDateMeta(entry.createdAt) + ' · ' + formatActor(entry.createdBy) + '</div>' +
+            '</div>'
+          );
+        }).join('') + '</div>'
+        : '<p class="admin-list-empty">Historial pendiente. Esta seccion queda lista para futuras acciones del proyecto.</p>'
+    );
+  }
+
+  function renderDetailSections(request) {
+    var meta = STATUS_META[request.status] || STATUS_META.new;
+
+    return (
+      '<div class="admin-detail-layout">' +
+      renderInfoSection('Informacion del cliente',
+        '<dl class="admin-detail-grid">' +
+        detail('ID', request.id) +
+        detail('Fecha', formatDate(request.createdAt)) +
+        detail('Cliente', request.name) +
+        detail('Telefono', request.phone) +
+        detail('Email', request.email) +
+        detail('Direccion', request.address || request.addressLine || '-') +
+        detail('Ciudad', request.city || '-') +
+        detail('Estado', request.stateRegion || '-') +
+        detail('Codigo Postal', request.zipCode || request.postalCode || '-') +
+        '</dl>'
+      ) +
+      renderInfoSection('Informacion del proyecto',
+        '<dl class="admin-detail-grid">' +
+        detail('Tipo', request.type === 'project' ? 'Proyecto' : 'Cotizacion') +
+        detail('Titulo del proyecto', request.projectTitle || '-') +
+        detail('Categoria', request.category) +
+        detail('Estado', meta.label) +
+        detail('Medidas', request.measures || '-') +
+        detail('Material', request.material || '-') +
+        detail('Presupuesto', request.budget || '-') +
+        detail('Ultima actualizacion', formatDateMeta(request.updatedAt)) +
+        detail('Mensaje', request.message || '-') +
+        detail('Origen', request.source || '-') +
+        '</dl>'
+      ) +
+      renderNotesSection(request) +
+      renderAttachmentsSection(request) +
+      renderHistorySection(request) +
       '</div>'
     );
   }
@@ -223,28 +676,8 @@
     var modal = byId('requestModal');
     var content = byId('modalContent');
     if (!modal || !content || !request) return;
-
-    var meta = STATUS_META[request.status] || STATUS_META.new;
-
-    content.innerHTML =
-      '<dl class="admin-detail-grid">' +
-      detail('ID', request.id) +
-      detail('Fecha', formatDate(request.createdAt)) +
-      detail('Nombre', request.name) +
-      detail('Categoria', request.category) +
-      detail('Telefono', request.phone) +
-      detail('Direccion', request.addressLine || request.address || '-') +
-      detail('Pueblo', request.city || '-') +
-      detail('Estado', request.stateRegion || '-') +
-      detail('Codigo Postal', request.postalCode || '-') +
-      detail('Email', request.email) +
-      detail('Estado', meta.label) +
-      detail('Medidas', request.measures || '-') +
-      detail('Material', request.material || '-') +
-      detail('Presupuesto', request.budget || '-') +
-      detail('Mensaje', request.message || '-') +
-      '</dl>' +
-      renderAttachments(request);
+    state.currentModalProjectId = request.id;
+    content.innerHTML = renderDetailSections(request);
 
     modal.hidden = false;
     document.body.classList.add('admin-modal-open');
@@ -253,8 +686,106 @@
   function closeModal() {
     var modal = byId('requestModal');
     if (!modal) return;
+    state.currentModalProjectId = null;
     modal.hidden = true;
     document.body.classList.remove('admin-modal-open');
+  }
+
+  async function handleAddProjectNote() {
+    var request = getCurrentModalProject();
+    var noteInput = byId('projectNoteText');
+    if (!request || !noteInput || !QuoteService || typeof QuoteService.addProjectNote !== 'function') return;
+
+    var text = String(noteInput.value || '').trim();
+    if (!text) {
+      showToast('error', 'Escribe una nota antes de guardarla.');
+      return;
+    }
+
+    try {
+      await QuoteService.addProjectNote(request.id, {
+        text: text,
+        createdBy: getCurrentAdminLabel()
+      });
+      noteInput.value = '';
+      openRequestModal(findQuote(request.id));
+      showToast('success', 'Nota agregada correctamente.');
+    } catch (error) {
+      showToast('error', 'No se pudo guardar la nota.');
+    }
+  }
+
+  async function handleDeleteProjectNote(noteId) {
+    var request = getCurrentModalProject();
+    if (!request || !noteId || !QuoteService || typeof QuoteService.deleteProjectNote !== 'function') return;
+
+    try {
+      await QuoteService.deleteProjectNote(request.id, noteId);
+      openRequestModal(findQuote(request.id));
+      showToast('info', 'Nota eliminada.');
+    } catch (error) {
+      showToast('error', 'No se pudo eliminar la nota.');
+    }
+  }
+
+  async function handleAddProjectAttachment() {
+    var request = getCurrentModalProject();
+    var nameInput = byId('projectAttachmentName');
+    var categoryInput = byId('projectAttachmentCategory');
+    var urlInput = byId('projectAttachmentUrl');
+    var filesInput = byId('projectAttachmentFiles');
+    if (!request || !nameInput || !categoryInput || !urlInput || !filesInput || !QuoteService) return;
+
+    var name = String(nameInput.value || '').trim();
+    var url = String(urlInput.value || '').trim();
+    var files = Array.prototype.slice.call(filesInput.files || []);
+    if (!files.length && (!name || !url)) {
+      showToast('error', 'Add a desktop file, or provide a name and reference URL.');
+      return;
+    }
+
+    try {
+      if (files.length) {
+        if (typeof QuoteService.addProjectAttachmentFiles !== 'function') {
+          throw new Error('Attachment uploads are not available.');
+        }
+
+        await QuoteService.addProjectAttachmentFiles(request.id, files, categoryInput.value || 'other');
+      } else {
+        if (typeof QuoteService.addProjectAttachment !== 'function') {
+          throw new Error('Manual attachment entries are not available.');
+        }
+
+        await QuoteService.addProjectAttachment(request.id, {
+          name: name,
+          category: categoryInput.value || 'other',
+          url: url,
+          createdBy: getCurrentAdminLabel()
+        });
+      }
+
+      nameInput.value = '';
+      urlInput.value = '';
+      filesInput.value = '';
+      categoryInput.value = 'photo';
+      openRequestModal(findQuote(request.id));
+      showToast('success', 'Attachment added successfully.');
+    } catch (error) {
+      showToast('error', 'Could not save the attachment.');
+    }
+  }
+
+  async function handleDeleteProjectAttachment(attachmentId) {
+    var request = getCurrentModalProject();
+    if (!request || !attachmentId || !QuoteService || typeof QuoteService.deleteProjectAttachment !== 'function') return;
+
+    try {
+      await QuoteService.deleteProjectAttachment(request.id, attachmentId);
+      openRequestModal(findQuote(request.id));
+      showToast('info', 'Adjunto eliminado.');
+    } catch (error) {
+      showToast('error', 'No se pudo eliminar el adjunto.');
+    }
   }
 
   function renderPreview(containerId, files) {
@@ -298,6 +829,50 @@
     budgetInput.addEventListener('blur', applyFormat);
   }
 
+  function setManualQuoteFormMode(mode, record) {
+    var title = byId('manualQuoteCardTitle');
+    var subtitle = byId('manualQuoteCardSubtitle');
+    var submit = byId('manualQuoteSubmitBtn');
+    var isEdit = mode === 'edit';
+
+    state.manualFormMode = isEdit ? 'edit' : 'create';
+    state.editingProjectId = isEdit && record ? record.id : null;
+
+    if (title) {
+      title.textContent = isEdit ? 'Editar Proyecto' : 'Proyecto Manual';
+    }
+
+    if (subtitle) {
+      subtitle.textContent = isEdit
+        ? 'Actualiza la información principal del cliente o proyecto. Las notas y adjuntos se gestionan por separado.'
+        : 'Crea un proyecto o registro de cliente desde el panel administrativo con la misma base de datos que usan las cotizaciones.';
+    }
+
+    if (submit) {
+      submit.textContent = isEdit ? 'Guardar Cambios' : 'Guardar Proyecto';
+    }
+  }
+
+  function fillManualQuoteForm(record) {
+    var project = record || {};
+
+    (byId('manualQuoteName') || {}).value = project.name || '';
+    (byId('manualQuotePhone') || {}).value = project.phone || '';
+    (byId('manualQuoteAddressLine') || {}).value = project.address || project.addressLine || '';
+    (byId('manualQuoteCity') || {}).value = project.city || '';
+    (byId('manualQuoteStateRegion') || {}).value = project.stateRegion || '';
+    (byId('manualQuotePostalCode') || {}).value = project.zipCode || project.postalCode || '';
+    (byId('manualQuoteEmail') || {}).value = project.email || '';
+    (byId('manualQuoteCategory') || {}).value = project.category || '';
+    (byId('manualQuoteProjectTitle') || {}).value = project.projectTitle || '';
+    (byId('manualQuoteMeasures') || {}).value = project.measures || '';
+    (byId('manualQuoteMaterial') || {}).value = project.material || '';
+    (byId('manualQuoteBudget') || {}).value = project.budget || '';
+    (byId('manualQuoteMessage') || {}).value = project.message || '';
+    (byId('manualQuoteStatus') || {}).value = project.status || 'new';
+    (byId('manualQuoteType') || {}).value = project.type || 'project';
+  }
+
   function resetManualQuoteForm() {
     var form = byId('manualQuoteForm');
     var card = byId('manualQuoteCard');
@@ -313,11 +888,26 @@
     if (card) {
       card.hidden = true;
     }
+    setManualQuoteFormMode('create');
   }
 
-  function openManualQuoteForm() {
+  function openManualQuoteForm(mode, record) {
     var card = byId('manualQuoteCard');
+    var imagesInput = byId('manualQuoteImages');
     if (!card) return;
+    if (imagesInput) {
+      imagesInput.value = '';
+    }
+    renderPreview('manualQuoteImagesPreview', []);
+    setManualQuoteStatus('', '');
+    setManualQuoteFormMode(mode, record);
+    if (mode !== 'edit') {
+      var form = byId('manualQuoteForm');
+      if (form) form.reset();
+    }
+    if (record) {
+      fillManualQuoteForm(record);
+    }
     card.hidden = false;
     card.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
@@ -338,18 +928,23 @@
     return {
       name: (byId('manualQuoteName') || {}).value || '',
       phone: (byId('manualQuotePhone') || {}).value || '',
-      addressLine: (byId('manualQuoteAddressLine') || {}).value || '',
+      address: (byId('manualQuoteAddressLine') || {}).value || '',
       city: (byId('manualQuoteCity') || {}).value || '',
       stateRegion: (byId('manualQuoteStateRegion') || {}).value || '',
-      postalCode: (byId('manualQuotePostalCode') || {}).value || '',
+      zipCode: (byId('manualQuotePostalCode') || {}).value || '',
       email: (byId('manualQuoteEmail') || {}).value || '',
       category: (byId('manualQuoteCategory') || {}).value || '',
+      projectTitle: (byId('manualQuoteProjectTitle') || {}).value || '',
       measures: (byId('manualQuoteMeasures') || {}).value || '',
       material: (byId('manualQuoteMaterial') || {}).value || '',
       budget: (byId('manualQuoteBudget') || {}).value || '',
       message: (byId('manualQuoteMessage') || {}).value || '',
       status: (byId('manualQuoteStatus') || {}).value || 'new',
-      source: 'admin_manual'
+      type: (byId('manualQuoteType') || {}).value || 'project',
+      notes: [],
+      attachments: [],
+      history: [],
+      source: 'manual_admin'
     };
   }
 
@@ -364,11 +959,17 @@
     bindBudgetFormatter('manualQuoteBudget');
 
     if (toggleBtn) {
-      toggleBtn.addEventListener('click', openManualQuoteForm);
+      toggleBtn.addEventListener('click', function () {
+        resetManualQuoteForm();
+        openManualQuoteForm('create');
+      });
     }
 
     if (emptyBtn) {
-      emptyBtn.addEventListener('click', openManualQuoteForm);
+      emptyBtn.addEventListener('click', function () {
+        resetManualQuoteForm();
+        openManualQuoteForm('create');
+      });
     }
 
     if (cancelBtn) {
@@ -384,25 +985,38 @@
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
       var files = imagesInput ? Array.prototype.slice.call(imagesInput.files || []) : [];
+      var payload = getManualQuotePayload();
 
       var maxImages = 10;
       if (window.SiteSettingsState && window.SiteSettingsState.quoteForm && window.SiteSettingsState.quoteForm.maxImages) {
         maxImages = Number(window.SiteSettingsState.quoteForm.maxImages) || 10;
       }
 
-      if (files.length > maxImages) {
-        setManualQuoteStatus('error', 'Puedes subir hasta ' + String(maxImages) + ' fotos por cotizacion manual.');
+      if (state.manualFormMode !== 'edit' && files.length > maxImages) {
+        setManualQuoteStatus('error', 'Puedes subir hasta ' + String(maxImages) + ' fotos por proyecto manual.');
         return;
       }
 
       try {
-        await QuoteService.saveQuote(getManualQuotePayload(), files);
-        setManualQuoteStatus('success', 'Cotizacion manual creada correctamente.');
-        showToast('success', 'La cotizacion manual ya aparece en solicitudes.');
+        if (state.manualFormMode === 'edit' && state.editingProjectId) {
+          var current = findQuote(state.editingProjectId);
+          await QuoteService.updateProject(state.editingProjectId, Object.assign({}, payload, {
+            notes: current && current.notes ? current.notes : [],
+            attachments: current && current.attachments ? current.attachments : [],
+            history: current && current.history ? current.history : [],
+            source: current && current.source ? current.source : 'manual_admin'
+          }));
+          setManualQuoteStatus('success', 'Proyecto actualizado correctamente.');
+          showToast('success', 'Project updated in Firestore.');
+        } else {
+          await QuoteService.createProject(payload, files);
+          setManualQuoteStatus('success', 'Proyecto manual creado correctamente.');
+          showToast('success', 'Project created in Firestore.');
+        }
         resetManualQuoteForm();
       } catch (error) {
-        console.error('Manual quote creation failed:', error);
-        setManualQuoteStatus('error', 'No se pudo crear la cotizacion manual.');
+        console.error('Project save failed:', error);
+        setManualQuoteStatus('error', state.manualFormMode === 'edit' ? 'No se pudo actualizar el proyecto.' : 'No se pudo crear el proyecto manual.');
       }
     });
   }
@@ -418,41 +1032,7 @@
     var action = target.getAttribute('data-action');
     var id = target.getAttribute('data-id');
     if (!action || !id) return;
-
-    if (action === 'view') {
-      openRequestModal(findQuote(id));
-      return;
-    }
-
-    if (!QuoteService) {
-      showToast('error', 'QuoteService no esta disponible.');
-      return;
-    }
-
-    try {
-      if (action === 'process') {
-        await QuoteService.updateQuoteStatus(id, 'in_progress');
-        showToast('success', 'Estado actualizado a En Proceso.');
-        return;
-      }
-
-      if (action === 'done') {
-        await QuoteService.updateQuoteStatus(id, 'completed');
-        showToast('success', 'Solicitud marcada como completada.');
-        return;
-      }
-
-      if (action === 'delete') {
-        var req = findQuote(id);
-        if (!req) return;
-        if (!window.confirm('Eliminar la solicitud de ' + req.name + '?')) return;
-        await QuoteService.deleteQuote(id);
-        closeModal();
-        showToast('info', 'Solicitud eliminada.');
-      }
-    } catch (error) {
-      showToast('error', 'No se pudo actualizar la solicitud.');
-    }
+    await runRowAction(action, id);
   }
 
   function updateNowClock() {
@@ -507,6 +1087,16 @@
     var tbody = byId('requestsTbody');
     if (!tbody) return;
     tbody.addEventListener('click', handleActionClick);
+    tbody.addEventListener('change', function (e) {
+      var target = e.target;
+      if (!(target instanceof HTMLSelectElement)) return;
+      if (!target.hasAttribute('data-actions-menu')) return;
+
+      var action = target.value;
+      var id = target.getAttribute('data-id');
+      target.value = '';
+      runRowAction(action, id);
+    });
   }
 
   function wireModal() {
@@ -519,6 +1109,39 @@
       var target = e.target;
       if (target instanceof HTMLElement && target.hasAttribute('data-close-modal')) {
         closeModal();
+        return;
+      }
+
+      if (!(target instanceof HTMLElement)) return;
+
+      if (target.id === 'addProjectNoteBtn') {
+        handleAddProjectNote();
+        return;
+      }
+
+      if (target.id === 'addProjectAttachmentBtn') {
+        handleAddProjectAttachment();
+        return;
+      }
+
+      if (target.id === 'editCurrentProjectBtn') {
+        var current = getCurrentModalProject();
+        if (current) {
+          closeModal();
+          openManualQuoteForm('edit', current);
+        }
+        return;
+      }
+
+      var noteId = target.getAttribute('data-note-delete');
+      if (noteId) {
+        handleDeleteProjectNote(noteId);
+        return;
+      }
+
+      var attachmentId = target.getAttribute('data-attachment-delete');
+      if (attachmentId) {
+        handleDeleteProjectAttachment(attachmentId);
       }
     });
 
@@ -636,8 +1259,55 @@
     }
   }
 
+  function wireExportModal() {
+    var openBtn = byId('openExportProjectsBtn');
+    var closeBtn = byId('closeExportModalBtn');
+    var cancelBtn = byId('cancelProjectsExportBtn');
+    var downloadBtn = byId('downloadProjectsExportBtn');
+    var modal = byId('exportModal');
+
+    if (openBtn) {
+      openBtn.addEventListener('click', openExportModal);
+    }
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeExportModal);
+    }
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', closeExportModal);
+    }
+
+    if (downloadBtn) {
+      downloadBtn.addEventListener('click', function () {
+        try {
+          handleProjectsExport();
+        } catch (error) {
+          showToast('error', error && error.message ? error.message : 'Could not export records.');
+        }
+      });
+    }
+
+    if (modal) {
+      modal.addEventListener('click', function (e) {
+        var target = e.target;
+        if (target instanceof HTMLElement && target.hasAttribute('data-close-export-modal')) {
+          closeExportModal();
+        }
+      });
+    }
+  }
+
+  function stopAuditEventsSubscription() {
+    if (typeof state.auditEventsUnsubscribe === 'function') {
+      state.auditEventsUnsubscribe();
+      state.auditEventsUnsubscribe = null;
+    }
+  }
+
   function startQuoteSubscription() {
-    if (!QuoteService || typeof QuoteService.subscribeQuotes !== 'function') {
+    var subscribe = QuoteService && (QuoteService.subscribeProjects || QuoteService.subscribeQuotes);
+    if (typeof subscribe !== 'function') {
       setLoading(false);
       showToast('error', 'No se pudo conectar con Firestore.');
       return;
@@ -646,14 +1316,30 @@
     stopQuoteSubscription();
     setLoading(true);
 
-    state.quotesUnsubscribe = QuoteService.subscribeQuotes(function (quotes) {
+    state.quotesUnsubscribe = subscribe(function (quotes) {
       state.quotes = Array.isArray(quotes) ? quotes : [];
       setLoading(false);
       renderTable();
+      renderAuditEvents();
     }, function () {
       setLoading(false);
-      showToast('error', 'No se pudieron cargar las solicitudes desde Firestore.');
+      showToast('error', 'No se pudieron cargar los registros desde Firestore.');
     });
+  }
+
+  function startAuditEventsSubscription() {
+    if (!QuoteService || typeof QuoteService.subscribeAdminAuditEvents !== 'function') {
+      renderAuditEvents();
+      return;
+    }
+
+    stopAuditEventsSubscription();
+    state.auditEventsUnsubscribe = QuoteService.subscribeAdminAuditEvents(function (events) {
+      state.auditEvents = Array.isArray(events) ? events : [];
+      renderAuditEvents();
+    }, function () {
+      showToast('error', 'Could not load audit activity.');
+    }, 30);
   }
 
   function bootDashboard() {
@@ -667,6 +1353,7 @@
       wireFilters();
       wireTableActions();
       wireModal();
+      wireExportModal();
       wireManualQuoteForm();
       wireActiveNav();
       updateNowClock();
@@ -677,6 +1364,7 @@
     }
 
     startQuoteSubscription();
+    startAuditEventsSubscription();
   }
 
   function explainAuthError(error) {
@@ -718,7 +1406,9 @@
 
     state.currentUser = null;
     state.quotes = [];
+    state.auditEvents = [];
     stopQuoteSubscription();
+    stopAuditEventsSubscription();
     updateIdentity(null);
     setSignOutVisible(false);
     showAuthShell();
@@ -806,6 +1496,7 @@
       return;
     }
 
+    mountEnvironmentBanner();
     wireAuthControls();
     initAuth();
   }
