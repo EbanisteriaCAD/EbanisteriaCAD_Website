@@ -191,7 +191,8 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
     var tbody = byId('requestsTbody');
     var empty = byId('emptyState');
     var tableWrap = byId('tableWrap');
-    if (!tbody || !empty || !tableWrap) {
+    var mobileList = byId('requestsMobileList');
+    if (!tbody || !empty || !tableWrap || !mobileList) {
       calcStats();
       return;
     }
@@ -200,7 +201,9 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
 
     if (!rows.length) {
       tbody.innerHTML = '';
+      mobileList.innerHTML = '';
       tableWrap.hidden = true;
+      mobileList.hidden = true;
       empty.hidden = false;
       calcStats();
       return;
@@ -208,6 +211,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
 
     empty.hidden = true;
     tableWrap.hidden = false;
+    mobileList.hidden = false;
 
     tbody.innerHTML = rows.map(function (item) {
       var meta = STATUS_META[item.status] || STATUS_META.new;
@@ -222,6 +226,47 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         '<td><span class="admin-status ' + meta.css + '">' + escapeHtml(meta.label) + '</span></td>' +
         '<td>' + rowActions(item.id, item.status) + '</td>' +
         '</tr>'
+      );
+    }).join('');
+
+    mobileList.innerHTML = rows.map(function (item) {
+      var meta = STATUS_META[item.status] || STATUS_META.new;
+      var title = item.projectTitle || item.category || 'Proyecto sin titulo';
+      var address = [item.city, item.stateRegion || item.zipCode].filter(Boolean).join(' · ');
+
+      return (
+        '<article class="admin-mobile-card">' +
+        '<div class="admin-mobile-card-head">' +
+        '<div class="admin-mobile-card-copy">' +
+        '<strong>' + escapeHtml(item.name || 'Cliente sin nombre') + '</strong>' +
+        '<span>' + escapeHtml(title) + '</span>' +
+        '</div>' +
+        '<span class="admin-status ' + meta.css + '">' + escapeHtml(meta.label) + '</span>' +
+        '</div>' +
+        '<div class="admin-mobile-meta">' +
+        '<div class="admin-mobile-meta-row">' +
+        '<span>Fecha</span>' +
+        '<strong>' + escapeHtml(formatDate(item.createdAt)) + '</strong>' +
+        '</div>' +
+        '<div class="admin-mobile-meta-row">' +
+        '<span>Categoria</span>' +
+        '<strong>' + escapeHtml(item.category || '-') + '</strong>' +
+        '</div>' +
+        '<div class="admin-mobile-meta-row">' +
+        '<span>Telefono</span>' +
+        '<strong><a href="tel:' + escapeHtml(item.phone || '') + '">' + escapeHtml(item.phone || '-') + '</a></strong>' +
+        '</div>' +
+        '<div class="admin-mobile-meta-row">' +
+        '<span>Email</span>' +
+        '<strong><a href="mailto:' + escapeHtml(item.email || '') + '">' + escapeHtml(item.email || '-') + '</a></strong>' +
+        '</div>' +
+        (address ? '<div class="admin-mobile-meta-row">' +
+        '<span>Ubicacion</span>' +
+        '<strong>' + escapeHtml(address) + '</strong>' +
+        '</div>' : '') +
+        '</div>' +
+        '<div class="admin-mobile-card-actions">' + rowActions(item.id, item.status) + '</div>' +
+        '</article>'
       );
     }).join('');
 
@@ -1084,18 +1129,26 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
 
   function wireTableActions() {
     var tbody = byId('requestsTbody');
-    if (!tbody) return;
-    tbody.addEventListener('click', handleActionClick);
-    tbody.addEventListener('change', function (e) {
-      var target = e.target;
-      if (!(target instanceof HTMLSelectElement)) return;
-      if (!target.hasAttribute('data-actions-menu')) return;
+    var mobileList = byId('requestsMobileList');
+    if (tbody) {
+      tbody.addEventListener('click', handleActionClick);
+      tbody.addEventListener('change', handleActionMenuChange);
+    }
+    if (mobileList) {
+      mobileList.addEventListener('click', handleActionClick);
+      mobileList.addEventListener('change', handleActionMenuChange);
+    }
+  }
 
-      var action = target.value;
-      var id = target.getAttribute('data-id');
-      target.value = '';
-      runRowAction(action, id);
-    });
+  function handleActionMenuChange(e) {
+    var target = e.target;
+    if (!(target instanceof HTMLSelectElement)) return;
+    if (!target.hasAttribute('data-actions-menu')) return;
+
+    var action = target.value;
+    var id = target.getAttribute('data-id');
+    target.value = '';
+    runRowAction(action, id);
   }
 
   function wireModal() {
