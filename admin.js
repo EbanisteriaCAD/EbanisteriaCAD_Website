@@ -1,4 +1,3 @@
-import { mountEnvironmentBanner } from './src/utils/envGuard.js';
 import { QuoteService } from './quote-service.js';
 import { FirebaseAdminAuth } from './firebase-auth.js';
 
@@ -1496,7 +1495,6 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       return;
     }
 
-    mountEnvironmentBanner();
     wireAuthControls();
     initAuth();
   }
