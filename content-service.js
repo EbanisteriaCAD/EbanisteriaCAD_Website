@@ -1,4 +1,4 @@
-import { assertSafeWrite } from './src/utils/envGuard.js';
+import { assertSafeWrite } from './src/utils/envGuard.js?v=20260414b';
 
 var ContentService;
 

@@ -1,4 +1,4 @@
-import { ENV } from './src/utils/envGuard.js';
+import { ENV } from './src/utils/envGuard.js?v=20260414b';
 
 (function () {
   var PLACEHOLDER_PREFIX = 'REPLACE_WITH_';
