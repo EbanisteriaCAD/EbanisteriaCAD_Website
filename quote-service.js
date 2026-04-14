@@ -631,7 +631,7 @@ var QuoteService;
   }
 
   async function createProject(project, files) {
-    assertSafeWrite({ requireConfirmation: true });
+    assertSafeWrite();
 
     var normalized = normalizeQuote(project);
     var uploadedAttachments = await uploadAttachments(normalized.id, files || []);
