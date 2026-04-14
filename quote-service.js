@@ -762,7 +762,16 @@ var QuoteService;
     }));
 
     assertSafeWrite();
-    await projectsCollectionRef().doc(projectId).set(serializeProjectForFirestore(payload), { merge: true });
+    // Keep legacy quote records in sync while the admin still reads both collections.
+    var batch = init().firestore.batch();
+    var serialized = serializeProjectForFirestore(payload);
+    batch.set(projectsCollectionRef().doc(projectId), serialized, { merge: true });
+
+    if (getLegacyQuotesCollectionName() !== getProjectsCollectionName()) {
+      batch.set(legacyQuotesCollectionRef().doc(projectId), serialized, { merge: true });
+    }
+
+    await batch.commit();
     return replaceLatestQuote(payload);
   }
 
