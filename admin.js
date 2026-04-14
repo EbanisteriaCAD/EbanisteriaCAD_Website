@@ -45,6 +45,20 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
     });
   }
 
+  function formatCompactMobileDate(iso) {
+    var d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '-';
+
+    return d.toLocaleString('en-US', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    }).replace(',', ' ·');
+  }
+
   function normalize(value) {
     return String(value || '').toLowerCase();
   }
@@ -244,9 +258,9 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         '<span class="admin-status ' + meta.css + '">' + escapeHtml(meta.label) + '</span>' +
         '</div>' +
         '<div class="admin-mobile-meta">' +
-        '<div class="admin-mobile-meta-row">' +
+        '<div class="admin-mobile-meta-row admin-mobile-meta-row-compact">' +
         '<span>Fecha</span>' +
-        '<strong>' + escapeHtml(formatDate(item.createdAt)) + '</strong>' +
+        '<strong class="admin-mobile-single-line" title="' + escapeHtml(formatDate(item.createdAt)) + '">' + escapeHtml(formatCompactMobileDate(item.createdAt)) + '</strong>' +
         '</div>' +
         '<div class="admin-mobile-meta-row">' +
         '<span>Categoria</span>' +
@@ -256,9 +270,9 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         '<span>Telefono</span>' +
         '<strong><a href="tel:' + escapeHtml(item.phone || '') + '">' + escapeHtml(item.phone || '-') + '</a></strong>' +
         '</div>' +
-        '<div class="admin-mobile-meta-row">' +
+        '<div class="admin-mobile-meta-row admin-mobile-meta-row-compact">' +
         '<span>Email</span>' +
-        '<strong><a href="mailto:' + escapeHtml(item.email || '') + '">' + escapeHtml(item.email || '-') + '</a></strong>' +
+        '<strong class="admin-mobile-single-line" title="' + escapeHtml(item.email || '-') + '"><a class="admin-mobile-single-line" href="mailto:' + escapeHtml(item.email || '') + '">' + escapeHtml(item.email || '-') + '</a></strong>' +
         '</div>' +
         (address ? '<div class="admin-mobile-meta-row">' +
         '<span>Ubicacion</span>' +

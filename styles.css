@@ -2206,6 +2206,18 @@ body.admin-auth-active .admin-app-shell {
     word-break: break-word;
   }
 
+  .admin-mobile-meta-row-compact {
+    grid-template-columns: minmax(82px, 92px) minmax(0, 1fr);
+  }
+
+  .admin-mobile-single-line {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: normal !important;
+  }
+
   .admin-mobile-card-actions .admin-actions-cell {
     width: 100%;
   }
