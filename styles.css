@@ -2022,11 +2022,48 @@ body.admin-auth-active .admin-app-shell {
 @media (max-width: 768px) {
   .admin-topbar {
     padding: 0 0.65rem;
-    height: 66px;
+    min-height: 66px;
+    height: auto;
+    align-items: center;
+  }
+
+  .admin-topbar-left,
+  .admin-topbar-right {
+    gap: 0.45rem;
+  }
+
+  .admin-topbar-left {
+    min-width: 0;
+    flex: 1 1 auto;
   }
 
   .admin-topbar-right {
-    gap: 0.45rem;
+    flex: 0 0 auto;
+  }
+
+  .admin-brand {
+    min-width: 0;
+    gap: 0.55rem;
+    flex: 1 1 auto;
+  }
+
+  .admin-brand > div {
+    min-width: 0;
+  }
+
+  .admin-brand strong,
+  .admin-brand small {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .admin-brand strong {
+    font-size: 0.88rem;
+  }
+
+  .admin-brand small {
+    font-size: 0.72rem;
   }
 
   .admin-user-label {
@@ -2034,16 +2071,33 @@ body.admin-auth-active .admin-app-shell {
   }
 
   .admin-brand-logo-wrap {
-    width: 112px;
-    max-height: 40px;
+    width: 84px;
+    max-height: 34px;
+    flex: 0 0 auto;
   }
 
   .admin-brand-logo {
-    max-height: 40px;
+    max-height: 34px;
   }
 
   .admin-now {
     display: none;
+  }
+
+  .admin-user-dot {
+    width: 28px;
+    height: 28px;
+    font-size: 0.95rem;
+  }
+
+  .admin-signout-btn {
+    padding: 0.44rem 0.7rem;
+    font-size: 0.8rem;
+  }
+
+  .admin-icon-btn {
+    width: 36px;
+    height: 36px;
   }
 
   .admin-detail-grid {
