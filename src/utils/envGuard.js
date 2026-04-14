@@ -1,4 +1,21 @@
-export const ENV = import.meta.env.VITE_ENV || 'development';
+const viteEnv = (typeof import.meta !== 'undefined' && import.meta && import.meta.env)
+  ? import.meta.env
+  : {};
+
+function inferRuntimeEnv() {
+  if (typeof window === 'undefined' || !window.location) {
+    return 'development';
+  }
+
+  var host = String(window.location.hostname || '').toLowerCase();
+  if (host === 'localhost' || host === '127.0.0.1') {
+    return 'development';
+  }
+
+  return 'production';
+}
+
+export const ENV = viteEnv.VITE_ENV || inferRuntimeEnv();
 export const isProduction = ENV === 'production';
 
 export function assertSafeWrite() {

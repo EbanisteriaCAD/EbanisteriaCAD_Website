@@ -2,6 +2,30 @@ import { ENV } from './src/utils/envGuard.js';
 
 (function () {
   var PLACEHOLDER_PREFIX = 'REPLACE_WITH_';
+  var viteEnv = (typeof import.meta !== 'undefined' && import.meta && import.meta.env)
+    ? import.meta.env
+    : {};
+
+  var embeddedEnvironments = {
+    development: {
+      apiKey: 'AIzaSyAwVljXUklWbroQNYMIKrM6pC0uRQl-VcY',
+      authDomain: 'ebanisteriacad-dev.firebaseapp.com',
+      projectId: 'ebanisteriacad-dev',
+      storageBucket: 'ebanisteriacad-dev.firebasestorage.app',
+      messagingSenderId: '769455881533',
+      appId: '1:769455881533:web:af03ee7c0af33017a8d954',
+      measurementId: ''
+    },
+    production: {
+      apiKey: 'AIzaSyAllmq87MTnMayJLqCCzndJA55LohshsUA',
+      authDomain: 'ebanisteriacad-14643.firebaseapp.com',
+      projectId: 'ebanisteriacad-14643',
+      storageBucket: 'ebanisteriacad-14643.firebasestorage.app',
+      messagingSenderId: '52273433150',
+      appId: '1:52273433150:web:4031299c7875b954d09f6f',
+      measurementId: ''
+    }
+  };
 
   var shared = {
     projectsCollection: 'projects',
@@ -23,14 +47,15 @@ import { ENV } from './src/utils/envGuard.js';
     ]
   };
 
+  var fallbackCoreConfig = embeddedEnvironments[ENV === 'production' ? 'production' : 'development'];
   var firebaseCoreConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
-    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
+    apiKey: viteEnv.VITE_FIREBASE_API_KEY || fallbackCoreConfig.apiKey,
+    authDomain: viteEnv.VITE_FIREBASE_AUTH_DOMAIN || fallbackCoreConfig.authDomain,
+    projectId: viteEnv.VITE_FIREBASE_PROJECT_ID || fallbackCoreConfig.projectId,
+    storageBucket: viteEnv.VITE_FIREBASE_STORAGE_BUCKET || fallbackCoreConfig.storageBucket,
+    messagingSenderId: viteEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || fallbackCoreConfig.messagingSenderId,
+    appId: viteEnv.VITE_FIREBASE_APP_ID || fallbackCoreConfig.appId,
+    measurementId: viteEnv.VITE_FIREBASE_MEASUREMENT_ID || fallbackCoreConfig.measurementId || ''
   };
 
   function isFilled(value) {
