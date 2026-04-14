@@ -1,5 +1,3 @@
-import { mountEnvironmentBanner } from './src/utils/envGuard.js';
-
 (function () {
   var PAGE_PATH = window.location.pathname.split('/').pop() || 'index.html';
   var QuoteService = window.QuoteService;
@@ -603,7 +601,6 @@ import { mountEnvironmentBanner } from './src/utils/envGuard.js';
     var settings = await loadSiteSettings();
     window.PublicSiteSettings = settings;
 
-    mountEnvironmentBanner();
     renderHeader(settings);
     renderFooter(settings);
     applyContactSettings(settings);
