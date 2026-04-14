@@ -163,13 +163,19 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
 
     try {
       if (action === 'process') {
-        await (QuoteService.updateProjectStatus || QuoteService.updateQuoteStatus)(id, 'in_progress');
+        var movedToProcess = await (QuoteService.updateProjectStatus || QuoteService.updateQuoteStatus)(id, 'in_progress');
+        if (!movedToProcess) {
+          throw new Error('No se pudo actualizar el estado del proyecto.');
+        }
         showToast('success', 'Estado actualizado a En Proceso.');
         return;
       }
 
       if (action === 'done') {
-        await (QuoteService.updateProjectStatus || QuoteService.updateQuoteStatus)(id, 'completed');
+        var movedToDone = await (QuoteService.updateProjectStatus || QuoteService.updateQuoteStatus)(id, 'completed');
+        if (!movedToDone) {
+          throw new Error('No se pudo actualizar el estado del proyecto.');
+        }
         showToast('success', 'Proyecto marcado como completado.');
         return;
       }

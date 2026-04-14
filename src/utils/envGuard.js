@@ -18,8 +18,14 @@ function inferRuntimeEnv() {
 export const ENV = viteEnv.VITE_ENV || inferRuntimeEnv();
 export const isProduction = ENV === 'production';
 
-export function assertSafeWrite() {
+export function assertSafeWrite(options = {}) {
+  var requireConfirmation = !!options.requireConfirmation;
+
   if (isProduction) {
+    if (!requireConfirmation) {
+      return;
+    }
+
     var confirmed = window.confirm(
       '⚠️ You are about to modify PRODUCTION data. Are you sure?'
     );
