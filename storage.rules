@@ -5,7 +5,8 @@ service firebase.storage {
     function isAdmin() {
       return request.auth != null
         && request.auth.token.email in [
-          'burgosaxel56@gmail.com'
+          'burgosaxel56@gmail.com',
+          'ebanisteriacad@gmail.com'
         ];
     }
 
@@ -14,6 +15,13 @@ service firebase.storage {
       allow write: if request.resource != null
         && request.resource.size < 8 * 1024 * 1024
         && request.resource.contentType.matches('image/.*');
+    }
+
+    match /project-files/{projectId}/{fileName} {
+      allow read: if true;
+      allow write: if isAdmin()
+        && request.resource != null
+        && request.resource.size < 20 * 1024 * 1024;
     }
 
     match /design-gallery/{categorySlug}/{fileName} {

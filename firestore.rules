@@ -26,52 +26,80 @@ service cloud.firestore {
       return data.keys().hasOnly(allowed);
     }
 
+    function isDateLike(value) {
+      return value is string || value is timestamp;
+    }
+
     function validQuotePayload(data, quoteId) {
       return hasOnlyKeys(data, [
           'id',
+          'type',
+          'createdAt',
+          'updatedAt',
           'name',
           'phone',
+          'email',
+          'address',
+          'zipCode',
+          'projectTitle',
           'addressLine',
           'city',
           'stateRegion',
           'postalCode',
-          'address',
-          'email',
           'category',
           'message',
-          'status',
-          'createdAt',
           'measures',
           'material',
           'budget',
+          'status',
+          'notes',
           'source',
-          'attachments'
+          'attachments',
+          'history'
         ])
         && data.id == quoteId
+        && data.type is string
+        && (data.type == 'quote' || data.type == 'project')
         && isNonEmptyString(data.name, 120)
         && isNonEmptyString(data.phone, 40)
-        && isNonEmptyString(data.addressLine, 240)
+        && isNonEmptyString(data.address, 240)
         && isNonEmptyString(data.city, 120)
         && isNonEmptyString(data.stateRegion, 32)
-        && isNonEmptyString(data.postalCode, 20)
-        && isNonEmptyString(data.address, 320)
+        && isNonEmptyString(data.zipCode, 20)
+        && data.addressLine is string
+        && data.postalCode is string
         && isNonEmptyString(data.email, 160)
         && isNonEmptyString(data.category, 80)
+        && data.projectTitle is string
         && isNonEmptyString(data.message, 4000)
+        && data.status is string
+        && (data.status == 'new' || data.status == 'in_progress' || data.status == 'completed' || data.status == 'archived')
+        && data.notes is list
         && data.attachments is list
-        && data.attachments.size() <= (
-          exists(/databases/$(database)/documents/siteSettings/public)
-          && get(/databases/$(database)/documents/siteSettings/public).data.quoteForm.maxImages is int
-            ? get(/databases/$(database)/documents/siteSettings/public).data.quoteForm.maxImages
-            : 10
-        )
-        && data.createdAt is string;
+        && data.history is list
+        && data.attachments.size() <= 100
+        && data.source is string
+        && (data.source == 'web_quote' || data.source == 'manual_admin')
+        && isDateLike(data.createdAt)
+        && isDateLike(data.updatedAt);
+    }
+
+    match /projects/{projectId} {
+      allow create: if (validQuotePayload(request.resource.data, projectId)
+        && request.resource.data.status == 'new'
+        && request.resource.data.source == 'web_quote'
+      ) || (
+        isAdmin()
+        && validQuotePayload(request.resource.data, projectId)
+      );
+
+      allow read, update, delete: if isAdmin();
     }
 
     match /quoteRequests/{quoteId} {
       allow create: if (validQuotePayload(request.resource.data, quoteId)
         && request.resource.data.status == 'new'
-        && request.resource.data.source == 'website'
+        && request.resource.data.source == 'web_quote'
       ) || (
         isAdmin()
         && validQuotePayload(request.resource.data, quoteId)
@@ -100,6 +128,13 @@ service cloud.firestore {
         && request.resource.data.message.html is string;
 
       allow read, update, delete: if isAdmin();
+    }
+
+    match /adminAuditEvents/{eventId} {
+      allow read, create: if isAdmin()
+        && request.resource.data.id is string
+        && request.resource.data.createdAt is string;
+      allow update, delete: if false;
     }
 
     match /designCategories/{categoryId} {

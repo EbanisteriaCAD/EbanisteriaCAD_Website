@@ -1,16 +1,20 @@
+import { ENV } from './src/utils/envGuard.js';
+
 (function () {
   var PLACEHOLDER_PREFIX = 'REPLACE_WITH_';
-  var host = String(window.location.hostname || '').toLowerCase();
-  var isLocalHost = host === 'localhost' || host === '127.0.0.1' || host === '::1';
 
   var shared = {
-    quotesCollection: 'quoteRequests',
+    projectsCollection: 'projects',
+    legacyQuotesCollection: 'quoteRequests',
+    quotesCollection: 'projects',
     designsCollection: 'designCategories',
     pricingCollection: 'pricingCards',
     siteSettingsCollection: 'siteSettings',
     siteSettingsDocId: 'public',
     mailCollection: 'mail',
+    adminAuditCollection: 'adminAuditEvents',
     quoteAttachmentsFolder: 'quote-attachments',
+    projectFilesFolder: 'project-files',
     designGalleryFolder: 'design-gallery',
     enableReceiptEmails: false,
     allowedAdminEmails: [
@@ -19,25 +23,14 @@
     ]
   };
 
-  var environments = {
-    production: {
-      apiKey: 'AIzaSyAllmq87MTnMayJLqCCzndJA55LohshsUA',
-      authDomain: 'ebanisteriacad-14643.firebaseapp.com',
-      projectId: 'ebanisteriacad-14643',
-      storageBucket: 'ebanisteriacad-14643.firebasestorage.app',
-      messagingSenderId: '52273433150',
-      appId: '1:52273433150:web:4031299c7875b954d09f6f',
-      measurementId: 'G-2EE5JTG813'
-    },
-    development: {
-      apiKey: 'AIzaSyAwVljXUklWbroQNYMIKrM6pC0uRQl-VcY',
-      authDomain: 'ebanisteriacad-dev.firebaseapp.com',
-      projectId: 'ebanisteriacad-dev',
-      storageBucket: 'ebanisteriacad-dev.firebasestorage.app',
-      messagingSenderId: '769455881533',
-      appId: '1:769455881533:web:af03ee7c0af33017a8d954',
-      measurementId: ''
-    }
+  var firebaseCoreConfig = {
+    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
   };
 
   function isFilled(value) {
@@ -63,17 +56,17 @@
     return config;
   }
 
-  var selectedName = isLocalHost ? 'development' : 'production';
-  var selected = mergeConfig(environments[selectedName]);
+  var selectedName = ENV === 'production' ? 'production' : 'development';
+  var selected = mergeConfig(firebaseCoreConfig);
 
   selected.environmentName = selectedName;
   selected.isDevelopment = selectedName === 'development';
+  selected.isProduction = selectedName === 'production';
   selected.isReady = isFilled(selected.apiKey) && isFilled(selected.projectId) && isFilled(selected.appId);
 
-  window.FirebaseConfigs = {
-    production: mergeConfig(environments.production),
-    development: mergeConfig(environments.development)
-  };
+  window.FirebaseConfigs = {};
+  window.FirebaseConfigs[selectedName] = mergeConfig(firebaseCoreConfig);
   window.FirebaseEnvironment = selectedName;
   window.FirebaseConfig = selected;
+  console.log('🔥 Firebase Environment:', ENV);
 })();
