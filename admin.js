@@ -14,6 +14,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
   var state = {
     search: '',
     statusFilter: 'Todos',
+    requestKindFilter: 'Todos',
     loading: false,
     authReady: false,
     currentUser: null,
@@ -71,17 +72,27 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
     return 'all';
   }
 
+  function filterValueToRequestKind(filter) {
+    if (filter === 'Visita') return 'visit';
+    if (filter === 'Cotizacion') return 'quote';
+    return 'all';
+  }
+
   function getFilteredQuotes() {
     var q = normalize(state.search);
     var statusFilter = filterValueToStatus(state.statusFilter);
+    var requestKindFilter = filterValueToRequestKind(state.requestKindFilter);
 
     return state.quotes.filter(function (item) {
       var statusOk = statusFilter === 'all' || item.status === statusFilter;
       if (!statusOk) return false;
 
+      var requestKindOk = requestKindFilter === 'all' || (item.requestKind || 'quote') === requestKindFilter;
+      if (!requestKindOk) return false;
+
       if (!q) return true;
 
-      return [item.name, item.email, item.category, item.projectTitle, item.phone, item.id, item.address, item.addressLine, item.city, item.stateRegion, item.zipCode, item.postalCode]
+      return [item.name, item.email, item.category, item.projectTitle, item.phone, item.id, item.address, item.addressLine, item.city, item.stateRegion, item.zipCode, item.postalCode, item.requestKind, item.preferredVisitDate, item.preferredVisitWindow]
         .some(function (v) {
           return normalize(v).indexOf(q) !== -1;
         });
@@ -122,6 +133,49 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
+  }
+
+  function requestKindLabel(value) {
+    return String(value || '').toLowerCase() === 'visit' ? 'Visita' : 'Cotizacion';
+  }
+
+  function categorySummary(item) {
+    var parts = [item.category || '-'];
+    if (item.requestKind === 'visit') {
+      parts.push('Visita');
+    }
+    return parts.join(' · ');
+  }
+
+  function visitWindowLabel(value) {
+    if (value === 'Manana') return 'Manana';
+    if (value === 'Tarde') return 'Tarde';
+    if (value === 'Flexible') return 'Flexible';
+    return value || '-';
+  }
+
+  function isVisitRequest(item) {
+    return !!item && item.requestKind === 'visit';
+  }
+
+  function requestKindBadge(item) {
+    var isVisit = isVisitRequest(item);
+    return '<span class="admin-request-kind-badge ' + (isVisit ? 'is-visit' : 'is-quote') + '">' + requestKindLabel(item && item.requestKind) + '</span>';
+  }
+
+  function requestInfoSummary(item) {
+    if (!isVisitRequest(item)) {
+      return requestKindLabel(item && item.requestKind);
+    }
+
+    var parts = [requestKindLabel(item && item.requestKind)];
+    if (item.preferredVisitDate) {
+      parts.push(item.preferredVisitDate);
+    }
+    if (item.preferredVisitWindow) {
+      parts.push(visitWindowLabel(item.preferredVisitWindow));
+    }
+    return parts.join(' · ');
   }
 
   function rowActions(id, status) {
@@ -239,8 +293,8 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       return (
         '<tr>' +
         '<td>' + formatDate(item.createdAt) + '</td>' +
-        '<td>' + escapeHtml(item.name) + '</td>' +
-        '<td>' + escapeHtml(item.category) + '</td>' +
+        '<td><div class="admin-request-primary-cell"><strong>' + escapeHtml(item.name) + '</strong>' + requestKindBadge(item) + '</div></td>' +
+        '<td><div class="admin-request-secondary-cell"><strong>' + escapeHtml(item.category || '-') + '</strong><span>' + escapeHtml(requestInfoSummary(item)) + '</span></div></td>' +
         '<td>' + escapeHtml(item.phone) + '</td>' +
         '<td>' + escapeHtml(item.email) + '</td>' +
         '<td><span class="admin-status ' + meta.css + '">' + escapeHtml(meta.label) + '</span></td>' +
@@ -260,6 +314,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         '<div class="admin-mobile-card-copy">' +
         '<strong>' + escapeHtml(item.name || 'Cliente sin nombre') + '</strong>' +
         '<span>' + escapeHtml(title) + '</span>' +
+        requestKindBadge(item) +
         '</div>' +
         '<span class="admin-status ' + meta.css + '">' + escapeHtml(meta.label) + '</span>' +
         '</div>' +
@@ -271,6 +326,10 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         '<div class="admin-mobile-meta-row">' +
         '<span>Categoria</span>' +
         '<strong>' + escapeHtml(item.category || '-') + '</strong>' +
+        '</div>' +
+        '<div class="admin-mobile-meta-row">' +
+        '<span>Solicitud</span>' +
+        '<strong>' + escapeHtml(requestInfoSummary(item)) + '</strong>' +
         '</div>' +
         '<div class="admin-mobile-meta-row">' +
         '<span>Telefono</span>' +
@@ -420,6 +479,9 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         zipCode: item.zipCode || item.postalCode || '',
         category: item.category || '',
         projectTitle: item.projectTitle || '',
+        requestKind: item.requestKind || 'quote',
+        preferredVisitDate: item.preferredVisitDate || '',
+        preferredVisitWindow: item.preferredVisitWindow || '',
         measures: item.measures || '',
         material: item.material || '',
         budget: item.budget || '',
@@ -454,7 +516,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
   function exportAsCsv(records, scope) {
     var rows = buildExportRows(records);
     var headers = Object.keys(rows[0] || {
-      id: '', type: '', status: '', createdAt: '', updatedAt: '', name: '', phone: '', email: '', address: '', city: '', stateRegion: '', zipCode: '', category: '', projectTitle: '', measures: '', material: '', budget: '', message: '', notesCount: '', attachmentsCount: '', historyCount: '', source: ''
+      id: '', type: '', status: '', createdAt: '', updatedAt: '', name: '', phone: '', email: '', address: '', city: '', stateRegion: '', zipCode: '', category: '', projectTitle: '', requestKind: '', preferredVisitDate: '', preferredVisitWindow: '', measures: '', material: '', budget: '', message: '', notesCount: '', attachmentsCount: '', historyCount: '', source: ''
     });
     var lines = [headers.join(',')].concat(rows.map(function (row) {
       return headers.map(function (header) {
@@ -480,7 +542,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
   function buildExportHtml(records, title) {
     var rows = buildExportRows(records);
     var headers = Object.keys(rows[0] || {
-      id: '', type: '', status: '', createdAt: '', updatedAt: '', name: '', phone: '', email: '', address: '', city: '', stateRegion: '', zipCode: '', category: '', projectTitle: '', measures: '', material: '', budget: '', message: '', notesCount: '', attachmentsCount: '', historyCount: '', source: ''
+      id: '', type: '', status: '', createdAt: '', updatedAt: '', name: '', phone: '', email: '', address: '', city: '', stateRegion: '', zipCode: '', category: '', projectTitle: '', requestKind: '', preferredVisitDate: '', preferredVisitWindow: '', measures: '', material: '', budget: '', message: '', notesCount: '', attachmentsCount: '', historyCount: '', source: ''
     });
 
     return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + escapeHtml(title) + '</title>' +
@@ -718,9 +780,12 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       renderInfoSection('Informacion del proyecto',
         '<dl class="admin-detail-grid">' +
         detail('Tipo', request.type === 'project' ? 'Proyecto' : 'Cotizacion') +
+        detail('Solicitud', requestKindLabel(request.requestKind)) +
         detail('Titulo del proyecto', request.projectTitle || '-') +
         detail('Categoria', request.category) +
         detail('Estado', meta.label) +
+        detail('Fecha deseada para visita', request.preferredVisitDate || '-') +
+        detail('Horario preferido', visitWindowLabel(request.preferredVisitWindow)) +
         detail('Medidas', request.measures || '-') +
         detail('Material', request.material || '-') +
         detail('Presupuesto', request.budget || '-') +
@@ -739,8 +804,12 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
   function openRequestModal(request) {
     var modal = byId('requestModal');
     var content = byId('modalContent');
+    var title = byId('requestModalTitle');
     if (!modal || !content || !request) return;
     state.currentModalProjectId = request.id;
+    if (title) {
+      title.textContent = isVisitRequest(request) ? 'Detalle de Visita' : 'Detalle de Proyecto';
+    }
     content.innerHTML = renderDetailSections(request);
 
     modal.hidden = false;
@@ -929,12 +998,22 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
     (byId('manualQuoteEmail') || {}).value = project.email || '';
     (byId('manualQuoteCategory') || {}).value = project.category || '';
     (byId('manualQuoteProjectTitle') || {}).value = project.projectTitle || '';
+    if (byId('manualQuoteRequestKind')) {
+      byId('manualQuoteRequestKind').value = project.requestKind || 'quote';
+    }
+    if (byId('manualQuotePreferredVisitDate')) {
+      byId('manualQuotePreferredVisitDate').value = project.preferredVisitDate || '';
+    }
+    if (byId('manualQuotePreferredVisitWindow')) {
+      byId('manualQuotePreferredVisitWindow').value = project.preferredVisitWindow || '';
+    }
     (byId('manualQuoteMeasures') || {}).value = project.measures || '';
     (byId('manualQuoteMaterial') || {}).value = project.material || '';
     (byId('manualQuoteBudget') || {}).value = project.budget || '';
     (byId('manualQuoteMessage') || {}).value = project.message || '';
     (byId('manualQuoteStatus') || {}).value = project.status || 'new';
     (byId('manualQuoteType') || {}).value = project.type || 'project';
+    updateManualRequestKindUI();
   }
 
   function resetManualQuoteForm() {
@@ -953,6 +1032,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       card.hidden = true;
     }
     setManualQuoteFormMode('create');
+    updateManualRequestKindUI();
   }
 
   function openManualQuoteForm(mode, record) {
@@ -989,6 +1069,10 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
   }
 
   function getManualQuotePayload() {
+    var requestKindField = byId('manualQuoteRequestKind');
+    var preferredVisitDateField = byId('manualQuotePreferredVisitDate');
+    var preferredVisitWindowField = byId('manualQuotePreferredVisitWindow');
+
     return {
       name: (byId('manualQuoteName') || {}).value || '',
       phone: (byId('manualQuotePhone') || {}).value || '',
@@ -999,6 +1083,9 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       email: (byId('manualQuoteEmail') || {}).value || '',
       category: (byId('manualQuoteCategory') || {}).value || '',
       projectTitle: (byId('manualQuoteProjectTitle') || {}).value || '',
+      requestKind: requestKindField ? (requestKindField.value || 'quote') : '',
+      preferredVisitDate: preferredVisitDateField ? (preferredVisitDateField.value || '') : '',
+      preferredVisitWindow: preferredVisitWindowField ? (preferredVisitWindowField.value || '') : '',
       measures: (byId('manualQuoteMeasures') || {}).value || '',
       material: (byId('manualQuoteMaterial') || {}).value || '',
       budget: (byId('manualQuoteBudget') || {}).value || '',
@@ -1010,6 +1097,14 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       history: [],
       source: 'manual_admin'
     };
+  }
+
+  function updateManualRequestKindUI() {
+    var requestKindField = byId('manualQuoteRequestKind');
+    var visitFields = byId('manualVisitFields');
+    if (!requestKindField || !visitFields) return;
+
+    visitFields.hidden = (requestKindField.value || 'quote') !== 'visit';
   }
 
   function wireManualQuoteForm() {
@@ -1046,6 +1141,12 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       });
     }
 
+    var requestKindField = byId('manualQuoteRequestKind');
+    if (requestKindField) {
+      requestKindField.addEventListener('change', updateManualRequestKindUI);
+      updateManualRequestKindUI();
+    }
+
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
       var files = imagesInput ? Array.prototype.slice.call(imagesInput.files || []) : [];
@@ -1065,6 +1166,9 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         if (state.manualFormMode === 'edit' && state.editingProjectId) {
           var current = findQuote(state.editingProjectId);
           await QuoteService.updateProject(state.editingProjectId, Object.assign({}, payload, {
+            requestKind: payload.requestKind || (current && current.requestKind) || 'quote',
+            preferredVisitDate: payload.preferredVisitDate || (current && current.preferredVisitDate) || '',
+            preferredVisitWindow: payload.preferredVisitWindow || (current && current.preferredVisitWindow) || '',
             notes: current && current.notes ? current.notes : [],
             attachments: current && current.attachments ? current.attachments : [],
             history: current && current.history ? current.history : [],
@@ -1134,7 +1238,8 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
   function wireFilters() {
     var search = byId('searchInput');
     var status = byId('statusFilter');
-    if (!search || !status) return;
+    var requestKind = byId('requestKindFilter');
+    if (!search || !status || !requestKind) return;
 
     search.addEventListener('input', function () {
       state.search = search.value;
@@ -1143,6 +1248,11 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
 
     status.addEventListener('change', function () {
       state.statusFilter = status.value;
+      renderTable();
+    });
+
+    requestKind.addEventListener('change', function () {
+      state.requestKindFilter = requestKind.value;
       renderTable();
     });
   }
