@@ -298,6 +298,10 @@ var QuoteService;
     return toSafeString(value) === 'project' ? 'project' : 'quote';
   }
 
+  function normalizeRequestKind(value) {
+    return toSafeString(value) === 'visit' ? 'visit' : 'quote';
+  }
+
   function normalizeStatus(value) {
     var normalized = toSafeString(value);
     if (normalized === 'in_progress' || normalized === 'completed' || normalized === 'archived') {
@@ -333,6 +337,9 @@ var QuoteService;
       postalCode: zipCode,
       category: toSafeString(source.category),
       projectTitle: buildProjectTitle(source),
+      requestKind: normalizeRequestKind(source.requestKind),
+      preferredVisitDate: toSafeString(source.preferredVisitDate),
+      preferredVisitWindow: toSafeString(source.preferredVisitWindow),
       message: toSafeString(source.message),
       measures: toSafeString(source.measures),
       material: toSafeString(source.material),
@@ -428,17 +435,18 @@ var QuoteService;
     }
 
     var customerName = quote.name || 'cliente';
-    var subject = 'Recibimos tu solicitud de cotizacion';
+    var isVisit = quote.requestKind === 'visit';
+    var subject = isVisit ? 'Recibimos tu solicitud de visita' : 'Recibimos tu solicitud de cotizacion';
     var text =
       'Hola ' + customerName + ',\n\n' +
-      'Recibimos tu solicitud de cotizacion para ' + (quote.category || 'tu proyecto') + '.\n' +
+      'Recibimos tu solicitud de ' + (isVisit ? 'visita' : 'cotizacion') + ' para ' + (quote.category || 'tu proyecto') + '.\n' +
       'Numero de referencia: ' + quote.id + '.\n\n' +
       'Te contactaremos pronto para continuar.\n\n' +
       'Ebanisteria CAD';
 
     var html =
       '<p>Hola ' + customerName + ',</p>' +
-      '<p>Recibimos tu solicitud de cotizacion para <strong>' + (quote.category || 'tu proyecto') + '</strong>.</p>' +
+      '<p>Recibimos tu solicitud de ' + (isVisit ? 'visita' : 'cotizacion') + ' para <strong>' + (quote.category || 'tu proyecto') + '</strong>.</p>' +
       '<p><strong>Numero de referencia:</strong> ' + quote.id + '</p>' +
       '<p>Te contactaremos pronto para continuar.</p>' +
       '<p>Ebanisteria CAD</p>';
@@ -618,6 +626,9 @@ var QuoteService;
       postalCode: normalized.postalCode,
       category: normalized.category,
       projectTitle: normalized.projectTitle,
+      requestKind: normalized.requestKind,
+      preferredVisitDate: normalized.preferredVisitDate,
+      preferredVisitWindow: normalized.preferredVisitWindow,
       message: normalized.message,
       measures: normalized.measures,
       material: normalized.material,
@@ -714,17 +725,21 @@ var QuoteService;
     assertSafeWrite({ requireConfirmation: true });
     if (current) {
       var auditId = generateEntityId('AUDIT');
-      await adminAuditCollectionRef().doc(auditId).set({
-        id: auditId,
-        projectId: current.id,
-        projectTitle: current.projectTitle || current.category || current.name,
-        clientName: current.name || '',
-        type: 'project_deleted',
-        createdAt: nowTimestamp(),
-        createdBy: getCurrentUserLabel(),
-        status: current.status || '',
-        source: current.source || ''
-      });
+      try {
+        await adminAuditCollectionRef().doc(auditId).set({
+          id: auditId,
+          projectId: current.id,
+          projectTitle: current.projectTitle || current.category || current.name,
+          clientName: current.name || '',
+          type: 'project_deleted',
+          createdAt: nowTimestamp(),
+          createdBy: getCurrentUserLabel(),
+          status: current.status || '',
+          source: current.source || ''
+        });
+      } catch (error) {
+        console.warn('Project delete audit log failed:', error);
+      }
     }
 
     var batch = init().firestore.batch();
