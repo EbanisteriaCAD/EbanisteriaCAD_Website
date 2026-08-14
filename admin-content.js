@@ -159,9 +159,11 @@ import { ContentService } from './content-service.js';
     if (!settings) return;
 
     var categories = (settings.quoteForm && settings.quoteForm.categories) || [];
+    var materials = (settings.quoteForm && settings.quoteForm.materials) || [];
     setSelectOptions('manualQuoteCategory', categories, 'Selecciona una categoría');
     setSelectOptions('designQuoteCategory', categories, 'Selecciona una categoría');
     setSelectOptions('pricingQuoteCategory', categories, 'General');
+    setSelectOptions('manualQuoteMaterial', materials, 'Selecciona un material');
 
     var manualHelp = byId('manualQuoteImagesHelp') || document.querySelector('#manualQuoteImages + .field-help');
     if (manualHelp) {
@@ -1093,6 +1095,7 @@ import { ContentService } from './content-service.js';
 
     byId('settingsQuoteMaxImages') && (byId('settingsQuoteMaxImages').value = String(settings.quoteForm.maxImages || 10));
     byId('settingsQuoteCategories') && (byId('settingsQuoteCategories').value = (settings.quoteForm.categories || []).join('\n'));
+    byId('settingsQuoteMaterials') && (byId('settingsQuoteMaterials').value = (settings.quoteForm.materials || []).join('\n'));
 
     byId('settingsAllowedAdminEmails') && (byId('settingsAllowedAdminEmails').value = (settings.admin.allowedAdminEmails || []).join('\n'));
 
@@ -1131,7 +1134,8 @@ import { ContentService } from './content-service.js';
       },
       quoteForm: {
         maxImages: Number((byId('settingsQuoteMaxImages') || {}).value || 10),
-        categories: toLineList((byId('settingsQuoteCategories') || {}).value || '')
+        categories: toLineList((byId('settingsQuoteCategories') || {}).value || ''),
+        materials: toLineList((byId('settingsQuoteMaterials') || {}).value || '')
       },
       admin: {
         allowedAdminEmails: toLineList((byId('settingsAllowedAdminEmails') || {}).value || '')

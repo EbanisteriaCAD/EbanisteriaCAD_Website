@@ -40,6 +40,7 @@
       },
       quoteForm: {
         maxImages: 10,
+        materials: ['Panel de PVC', 'Variedad de Maderas', 'Panel Hidrófugo'],
         categories: ['Cocinas', 'Closets', 'Centros TV', 'Baños', 'Comercial', 'Restauración']
       },
       operations: {
@@ -108,6 +109,7 @@
       },
       quoteForm: {
         maxImages: Math.max(1, Math.min(20, Number(quoteForm.maxImages || defaults.quoteForm.maxImages))),
+        materials: uniqueStrings(quoteForm.materials).length ? uniqueStrings(quoteForm.materials) : defaults.quoteForm.materials.slice(),
         categories: uniqueStrings(quoteForm.categories).length ? uniqueStrings(quoteForm.categories) : defaults.quoteForm.categories.slice()
       },
       operations: {
@@ -304,6 +306,22 @@
     }
   }
 
+  function applyMaterialOptions(settings) {
+    var materialField = document.getElementById('material');
+    if (!materialField) return;
+
+    var currentValue = materialField.value || '';
+    var materials = settings.quoteForm.materials || [];
+
+    materialField.innerHTML = '<option value="">Selecciona un material</option>' + materials.map(function (material) {
+      return '<option value="' + material + '">' + material + '</option>';
+    }).join('');
+
+    if (materials.indexOf(currentValue) >= 0) {
+      materialField.value = currentValue;
+    }
+  }
+
   function applyCategoryFromQuery(settings) {
     var form = document.getElementById('quoteForm');
     if (!form) return;
@@ -333,6 +351,7 @@
     if (!form) return;
 
     applyCategoryOptions(settings);
+    applyMaterialOptions(settings);
     applyCategoryFromQuery(settings);
     bindRequestKindSelector();
 
