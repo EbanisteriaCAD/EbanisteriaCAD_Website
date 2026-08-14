@@ -118,6 +118,13 @@
                     <input id="manualQuoteProjectTitle" type="text" />
                   </div>
                   <div>
+                    <label for="manualQuoteRequestKind">Tipo de solicitud</label>
+                    <select id="manualQuoteRequestKind">
+                      <option value="quote">Cotizacion</option>
+                      <option value="visit">Visita</option>
+                    </select>
+                  </div>
+                  <div>
                     <label for="manualQuoteMeasures">Medidas aproximadas</label>
                     <input id="manualQuoteMeasures" type="text" />
                   </div>
@@ -155,6 +162,25 @@
                   </div>
                 </div>
 
+                <div id="manualVisitFields" class="admin-visit-fields" hidden>
+                  <div class="grid grid-2">
+                    <div>
+                      <label for="manualQuotePreferredVisitDate">Fecha deseada para visita</label>
+                      <input id="manualQuotePreferredVisitDate" type="date" />
+                    </div>
+                    <div>
+                      <label for="manualQuotePreferredVisitWindow">Horario preferido</label>
+                      <select id="manualQuotePreferredVisitWindow">
+                        <option value="">Selecciona un horario</option>
+                        <option value="Manana">Manana</option>
+                        <option value="Tarde">Tarde</option>
+                        <option value="Flexible">Flexible</option>
+                      </select>
+                    </div>
+                  </div>
+                  <p class="field-help">Usa estos campos cuando el registro sea una solicitud de visita.</p>
+                </div>
+
                 <div>
                   <label for="manualQuoteImages">Fotos del proyecto</label>
                   <input id="manualQuoteImages" type="file" accept="image/*" multiple />
@@ -177,6 +203,11 @@
 
             <div class="admin-toolbar">
               <input id="searchInput" type="search" placeholder="Buscar por cliente, email, teléfono, dirección o categoría" />
+              <select id="requestKindFilter" aria-label="Filtrar por tipo de solicitud">
+                <option value="Todos">Todas las solicitudes</option>
+                <option value="Cotizacion">Cotizaciones</option>
+                <option value="Visita">Visitas</option>
+              </select>
               <select id="statusFilter" aria-label="Filtrar por estado">
                 <option value="Todos">Todos</option>
                 <option value="Nuevo">Nuevo</option>

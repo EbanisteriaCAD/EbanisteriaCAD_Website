@@ -14,6 +14,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
   var state = {
     search: '',
     statusFilter: 'Todos',
+    requestKindFilter: 'Todos',
     loading: false,
     authReady: false,
     currentUser: null,
@@ -71,17 +72,27 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
     return 'all';
   }
 
+  function filterValueToRequestKind(filter) {
+    if (filter === 'Visita') return 'visit';
+    if (filter === 'Cotizacion') return 'quote';
+    return 'all';
+  }
+
   function getFilteredQuotes() {
     var q = normalize(state.search);
     var statusFilter = filterValueToStatus(state.statusFilter);
+    var requestKindFilter = filterValueToRequestKind(state.requestKindFilter);
 
     return state.quotes.filter(function (item) {
       var statusOk = statusFilter === 'all' || item.status === statusFilter;
       if (!statusOk) return false;
 
+      var requestKindOk = requestKindFilter === 'all' || (item.requestKind || 'quote') === requestKindFilter;
+      if (!requestKindOk) return false;
+
       if (!q) return true;
 
-      return [item.name, item.email, item.category, item.projectTitle, item.phone, item.id, item.address, item.addressLine, item.city, item.stateRegion, item.zipCode, item.postalCode]
+      return [item.name, item.email, item.category, item.projectTitle, item.phone, item.id, item.address, item.addressLine, item.city, item.stateRegion, item.zipCode, item.postalCode, item.requestKind, item.preferredVisitDate, item.preferredVisitWindow]
         .some(function (v) {
           return normalize(v).indexOf(q) !== -1;
         });
@@ -141,6 +152,30 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
     if (value === 'Tarde') return 'Tarde';
     if (value === 'Flexible') return 'Flexible';
     return value || '-';
+  }
+
+  function isVisitRequest(item) {
+    return !!item && item.requestKind === 'visit';
+  }
+
+  function requestKindBadge(item) {
+    var isVisit = isVisitRequest(item);
+    return '<span class="admin-request-kind-badge ' + (isVisit ? 'is-visit' : 'is-quote') + '">' + requestKindLabel(item && item.requestKind) + '</span>';
+  }
+
+  function requestInfoSummary(item) {
+    if (!isVisitRequest(item)) {
+      return requestKindLabel(item && item.requestKind);
+    }
+
+    var parts = [requestKindLabel(item && item.requestKind)];
+    if (item.preferredVisitDate) {
+      parts.push(item.preferredVisitDate);
+    }
+    if (item.preferredVisitWindow) {
+      parts.push(visitWindowLabel(item.preferredVisitWindow));
+    }
+    return parts.join(' · ');
   }
 
   function rowActions(id, status) {
@@ -258,8 +293,8 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       return (
         '<tr>' +
         '<td>' + formatDate(item.createdAt) + '</td>' +
-        '<td>' + escapeHtml(item.name) + '</td>' +
-        '<td>' + escapeHtml(categorySummary(item)) + '</td>' +
+        '<td><div class="admin-request-primary-cell"><strong>' + escapeHtml(item.name) + '</strong>' + requestKindBadge(item) + '</div></td>' +
+        '<td><div class="admin-request-secondary-cell"><strong>' + escapeHtml(item.category || '-') + '</strong><span>' + escapeHtml(requestInfoSummary(item)) + '</span></div></td>' +
         '<td>' + escapeHtml(item.phone) + '</td>' +
         '<td>' + escapeHtml(item.email) + '</td>' +
         '<td><span class="admin-status ' + meta.css + '">' + escapeHtml(meta.label) + '</span></td>' +
@@ -279,6 +314,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         '<div class="admin-mobile-card-copy">' +
         '<strong>' + escapeHtml(item.name || 'Cliente sin nombre') + '</strong>' +
         '<span>' + escapeHtml(title) + '</span>' +
+        requestKindBadge(item) +
         '</div>' +
         '<span class="admin-status ' + meta.css + '">' + escapeHtml(meta.label) + '</span>' +
         '</div>' +
@@ -289,7 +325,11 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         '</div>' +
         '<div class="admin-mobile-meta-row">' +
         '<span>Categoria</span>' +
-        '<strong>' + escapeHtml(categorySummary(item)) + '</strong>' +
+        '<strong>' + escapeHtml(item.category || '-') + '</strong>' +
+        '</div>' +
+        '<div class="admin-mobile-meta-row">' +
+        '<span>Solicitud</span>' +
+        '<strong>' + escapeHtml(requestInfoSummary(item)) + '</strong>' +
         '</div>' +
         '<div class="admin-mobile-meta-row">' +
         '<span>Telefono</span>' +
@@ -764,8 +804,12 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
   function openRequestModal(request) {
     var modal = byId('requestModal');
     var content = byId('modalContent');
+    var title = byId('requestModalTitle');
     if (!modal || !content || !request) return;
     state.currentModalProjectId = request.id;
+    if (title) {
+      title.textContent = isVisitRequest(request) ? 'Detalle de Visita' : 'Detalle de Proyecto';
+    }
     content.innerHTML = renderDetailSections(request);
 
     modal.hidden = false;
@@ -969,6 +1013,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
     (byId('manualQuoteMessage') || {}).value = project.message || '';
     (byId('manualQuoteStatus') || {}).value = project.status || 'new';
     (byId('manualQuoteType') || {}).value = project.type || 'project';
+    updateManualRequestKindUI();
   }
 
   function resetManualQuoteForm() {
@@ -987,6 +1032,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       card.hidden = true;
     }
     setManualQuoteFormMode('create');
+    updateManualRequestKindUI();
   }
 
   function openManualQuoteForm(mode, record) {
@@ -1053,6 +1099,14 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
     };
   }
 
+  function updateManualRequestKindUI() {
+    var requestKindField = byId('manualQuoteRequestKind');
+    var visitFields = byId('manualVisitFields');
+    if (!requestKindField || !visitFields) return;
+
+    visitFields.hidden = (requestKindField.value || 'quote') !== 'visit';
+  }
+
   function wireManualQuoteForm() {
     var form = byId('manualQuoteForm');
     var toggleBtn = byId('toggleManualQuoteBtn');
@@ -1085,6 +1139,12 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
       imagesInput.addEventListener('change', function () {
         renderPreview('manualQuoteImagesPreview', imagesInput.files);
       });
+    }
+
+    var requestKindField = byId('manualQuoteRequestKind');
+    if (requestKindField) {
+      requestKindField.addEventListener('change', updateManualRequestKindUI);
+      updateManualRequestKindUI();
     }
 
     form.addEventListener('submit', async function (e) {
@@ -1178,7 +1238,8 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
   function wireFilters() {
     var search = byId('searchInput');
     var status = byId('statusFilter');
-    if (!search || !status) return;
+    var requestKind = byId('requestKindFilter');
+    if (!search || !status || !requestKind) return;
 
     search.addEventListener('input', function () {
       state.search = search.value;
@@ -1187,6 +1248,11 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
 
     status.addEventListener('change', function () {
       state.statusFilter = status.value;
+      renderTable();
+    });
+
+    requestKind.addEventListener('change', function () {
+      state.requestKindFilter = requestKind.value;
       renderTable();
     });
   }

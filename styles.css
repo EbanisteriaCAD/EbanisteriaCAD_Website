@@ -1467,6 +1467,60 @@ main p {
   background: #fff;
 }
 
+.admin-request-primary-cell,
+.admin-request-secondary-cell {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-request-primary-cell strong,
+.admin-request-secondary-cell strong {
+  font-size: 0.97rem;
+}
+
+.admin-request-secondary-cell span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+}
+
+.admin-request-kind-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.2rem 0.58rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid var(--border);
+}
+
+.admin-request-kind-badge.is-quote {
+  color: #1f3a8a;
+  background: #eef4ff;
+  border-color: #c9d9ff;
+}
+
+.admin-request-kind-badge.is-visit {
+  color: #0f766e;
+  background: #ecfeff;
+  border-color: #bae6fd;
+}
+
+.admin-visit-fields {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fbfcfe;
+}
+
+.admin-visit-fields[hidden] {
+  display: none;
+}
+
 .admin-loading {
   border: 1px dashed var(--border);
   border-radius: 10px;
@@ -2263,6 +2317,10 @@ body.admin-auth-active .admin-app-shell {
     color: var(--muted);
     font-size: 0.88rem;
     line-height: 1.35;
+  }
+
+  .admin-mobile-card-copy .admin-request-kind-badge {
+    margin-top: 0.15rem;
   }
 
   .admin-mobile-meta {
