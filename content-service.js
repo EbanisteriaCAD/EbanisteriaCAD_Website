@@ -305,6 +305,7 @@ var ContentService;
       },
       quoteForm: {
         maxImages: 10,
+        accessories: ['Luces', 'Zafacon', 'Espejos'],
         materials: ['Panel de PVC', 'Variedad de Maderas', 'Panel Hidrófugo'],
         categories: ['Cocinas', 'Closets', 'Centros TV', 'Baños', 'Comercial', 'Remodelación']
       },
@@ -360,6 +361,7 @@ var ContentService;
       },
       quoteForm: {
         maxImages: Math.max(1, Math.min(20, Number(quoteForm.maxImages || defaults.quoteForm.maxImages))),
+        accessories: uniqueStrings(quoteForm.accessories).length ? uniqueStrings(quoteForm.accessories) : defaults.quoteForm.accessories.slice(),
         materials: uniqueStrings(quoteForm.materials).length ? uniqueStrings(quoteForm.materials) : defaults.quoteForm.materials.slice(),
         categories: uniqueStrings(quoteForm.categories).length ? uniqueStrings(quoteForm.categories) : defaults.quoteForm.categories.slice()
       },

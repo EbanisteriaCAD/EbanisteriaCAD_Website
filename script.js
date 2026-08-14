@@ -40,6 +40,7 @@
       },
       quoteForm: {
         maxImages: 10,
+        accessories: ['Luces', 'Zafacon', 'Espejos'],
         materials: ['Panel de PVC', 'Variedad de Maderas', 'Panel Hidrófugo'],
         categories: ['Cocinas', 'Closets', 'Centros TV', 'Baños', 'Comercial', 'Restauración']
       },
@@ -109,6 +110,7 @@
       },
       quoteForm: {
         maxImages: Math.max(1, Math.min(20, Number(quoteForm.maxImages || defaults.quoteForm.maxImages))),
+        accessories: uniqueStrings(quoteForm.accessories).length ? uniqueStrings(quoteForm.accessories) : defaults.quoteForm.accessories.slice(),
         materials: uniqueStrings(quoteForm.materials).length ? uniqueStrings(quoteForm.materials) : defaults.quoteForm.materials.slice(),
         categories: uniqueStrings(quoteForm.categories).length ? uniqueStrings(quoteForm.categories) : defaults.quoteForm.categories.slice()
       },
@@ -296,6 +298,12 @@
     });
   }
 
+  function getSelectedQuoteAccessories() {
+    return Array.prototype.slice.call(document.querySelectorAll('input[name="quoteAccessories"]:checked')).map(function (input) {
+      return input.value;
+    });
+  }
+
   function updateCategoryFieldValue() {
     var categoryField = document.getElementById('category');
     if (!categoryField) return;
@@ -307,6 +315,12 @@
     if (checklist) {
       checklist.classList.remove('is-invalid');
     }
+  }
+
+  function updateAccessoriesFieldValue() {
+    var accessoriesField = document.getElementById('accessoriesSummary');
+    if (!accessoriesField) return;
+    accessoriesField.value = getSelectedQuoteAccessories().join(', ');
   }
 
   function applyCategoryOptions(settings) {
@@ -338,6 +352,34 @@
     });
 
     updateCategoryFieldValue();
+  }
+
+  function applyAccessoriesOptions(settings) {
+    var accessoriesField = document.getElementById('accessoriesSummary');
+    var checklist = document.getElementById('accessoriesChecklist');
+    if (!accessoriesField || !checklist) return;
+
+    var currentValues = (accessoriesField.value || '').split(',').map(function (value) {
+      return String(value || '').trim();
+    }).filter(Boolean);
+    var accessories = settings.quoteForm.accessories || [];
+
+    checklist.innerHTML = accessories.map(function (accessory, index) {
+      var inputId = 'quoteAccessoryOption' + String(index);
+      var checked = currentValues.indexOf(accessory) >= 0 ? ' checked' : '';
+      return (
+        '<label class="option-checklist-item" for="' + inputId + '">' +
+        '<input id="' + inputId + '" type="checkbox" name="quoteAccessories" value="' + accessory + '"' + checked + ' />' +
+        '<span>' + accessory + '</span>' +
+        '</label>'
+      );
+    }).join('');
+
+    checklist.querySelectorAll('input[name="quoteAccessories"]').forEach(function (input) {
+      input.addEventListener('change', updateAccessoriesFieldValue);
+    });
+
+    updateAccessoriesFieldValue();
   }
 
   function applyMaterialOptions(settings) {
@@ -385,6 +427,7 @@
     if (!form) return;
 
     applyCategoryOptions(settings);
+    applyAccessoriesOptions(settings);
     applyMaterialOptions(settings);
     applyCategoryFromQuery(settings);
     bindRequestKindSelector();
@@ -517,6 +560,7 @@
 
   function getQuotePayload() {
     var selectedCategories = getSelectedQuoteCategories();
+    var selectedAccessories = getSelectedQuoteAccessories();
     return {
       name: (document.getElementById('name') || {}).value || '',
       phone: (document.getElementById('phone') || {}).value || '',
@@ -530,6 +574,7 @@
       preferredVisitDate: (document.getElementById('preferredVisitDate') || {}).value || '',
       preferredVisitWindow: (document.getElementById('preferredVisitWindow') || {}).value || '',
       measures: (document.getElementById('measures') || {}).value || '',
+      accessories: selectedAccessories,
       material: (document.getElementById('material') || {}).value || '',
       budget: (document.getElementById('budget') || {}).value || '',
       message: (document.getElementById('message') || {}).value || ''
@@ -751,6 +796,7 @@
         form.reset();
         renderProjectImagePreview([]);
         applyCategoryOptions(settings);
+        applyAccessoriesOptions(settings);
         clearCategoryChecklistError();
         bindRequestKindSelector();
       } catch (error) {

@@ -154,6 +154,10 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
     return value || '-';
   }
 
+  function accessoriesLabel(items) {
+    return Array.isArray(items) && items.length ? items.join(', ') : '-';
+  }
+
   function isVisitRequest(item) {
     return !!item && item.requestKind === 'visit';
   }
@@ -787,6 +791,7 @@ import { FirebaseAdminAuth } from './firebase-auth.js';
         detail('Fecha deseada para visita', request.preferredVisitDate || '-') +
         detail('Horario preferido', visitWindowLabel(request.preferredVisitWindow)) +
         detail('Medidas', request.measures || '-') +
+        detail('Accesorios', accessoriesLabel(request.accessories)) +
         detail('Material', request.material || '-') +
         detail('Presupuesto', request.budget || '-') +
         detail('Ultima actualizacion', formatDateMeta(request.updatedAt)) +

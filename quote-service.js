@@ -172,6 +172,20 @@ var QuoteService;
     return Array.isArray(input) ? input.slice() : [];
   }
 
+  function normalizeStringList(input) {
+    var seen = Object.create(null);
+    return normalizeSimpleArray(input)
+      .map(function (item) {
+        return toSafeString(item);
+      })
+      .filter(function (item) {
+        var key = item.toLowerCase();
+        if (!item || seen[key]) return false;
+        seen[key] = true;
+        return true;
+      });
+  }
+
   function getCurrentUserLabel() {
     // TODO: Replace temporary current user resolution with Firebase Auth user metadata everywhere.
     var auth = window.FirebaseAdminAuth;
@@ -342,6 +356,7 @@ var QuoteService;
       preferredVisitWindow: toSafeString(source.preferredVisitWindow),
       message: toSafeString(source.message),
       measures: toSafeString(source.measures),
+      accessories: normalizeStringList(source.accessories),
       material: toSafeString(source.material),
       budget: toSafeString(source.budget),
       status: normalizeStatus(source.status),
@@ -631,6 +646,7 @@ var QuoteService;
       preferredVisitWindow: normalized.preferredVisitWindow,
       message: normalized.message,
       measures: normalized.measures,
+      accessories: normalized.accessories,
       material: normalized.material,
       budget: normalized.budget,
       status: normalized.status,

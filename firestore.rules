@@ -52,6 +52,7 @@ service cloud.firestore {
           'preferredVisitWindow',
           'message',
           'measures',
+          'accessories',
           'material',
           'budget',
           'status',
@@ -79,6 +80,7 @@ service cloud.firestore {
         && data.preferredVisitWindow is string
         && data.projectTitle is string
         && isNonEmptyString(data.message, 4000)
+        && data.accessories is list
         && data.status is string
         && (data.status == 'new' || data.status == 'in_progress' || data.status == 'completed' || data.status == 'archived')
         && data.notes is list

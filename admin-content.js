@@ -1095,6 +1095,7 @@ import { ContentService } from './content-service.js';
 
     byId('settingsQuoteMaxImages') && (byId('settingsQuoteMaxImages').value = String(settings.quoteForm.maxImages || 10));
     byId('settingsQuoteCategories') && (byId('settingsQuoteCategories').value = (settings.quoteForm.categories || []).join('\n'));
+    byId('settingsQuoteAccessories') && (byId('settingsQuoteAccessories').value = (settings.quoteForm.accessories || []).join('\n'));
     byId('settingsQuoteMaterials') && (byId('settingsQuoteMaterials').value = (settings.quoteForm.materials || []).join('\n'));
 
     byId('settingsAllowedAdminEmails') && (byId('settingsAllowedAdminEmails').value = (settings.admin.allowedAdminEmails || []).join('\n'));
@@ -1135,6 +1136,7 @@ import { ContentService } from './content-service.js';
       quoteForm: {
         maxImages: Number((byId('settingsQuoteMaxImages') || {}).value || 10),
         categories: toLineList((byId('settingsQuoteCategories') || {}).value || ''),
+        accessories: toLineList((byId('settingsQuoteAccessories') || {}).value || ''),
         materials: toLineList((byId('settingsQuoteMaterials') || {}).value || '')
       },
       admin: {
