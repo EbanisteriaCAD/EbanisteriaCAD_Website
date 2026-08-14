@@ -40,7 +40,7 @@
       },
       quoteForm: {
         maxImages: 10,
-        categories: ['Cocinas', 'Closets', 'Centros TV', 'Baños', 'Comercial', 'Remodelación']
+        categories: ['Cocinas', 'Closets', 'Centros TV', 'Baños', 'Comercial', 'Restauración']
       },
       operations: {
         maintenanceMode: false,
