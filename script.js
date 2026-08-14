@@ -290,20 +290,54 @@
     return map;
   }
 
-  function applyCategoryOptions(settings) {
+  function getSelectedQuoteCategories() {
+    return Array.prototype.slice.call(document.querySelectorAll('input[name="quoteCategories"]:checked')).map(function (input) {
+      return input.value;
+    });
+  }
+
+  function updateCategoryFieldValue() {
     var categoryField = document.getElementById('category');
     if (!categoryField) return;
+    categoryField.value = getSelectedQuoteCategories().join(', ');
+  }
 
-    var currentValue = categoryField.value || '';
-    var categories = settings.quoteForm.categories || [];
-    categoryField.innerHTML = '<option value="">Selecciona una categoría</option>' +
-      categories.map(function (category) {
-        return '<option value="' + category + '">' + category + '</option>';
-      }).join('');
-
-    if (categories.indexOf(currentValue) >= 0) {
-      categoryField.value = currentValue;
+  function clearCategoryChecklistError() {
+    var checklist = document.getElementById('categoryChecklist');
+    if (checklist) {
+      checklist.classList.remove('is-invalid');
     }
+  }
+
+  function applyCategoryOptions(settings) {
+    var categoryField = document.getElementById('category');
+    var checklist = document.getElementById('categoryChecklist');
+    if (!categoryField || !checklist) return;
+
+    var currentValues = (categoryField.value || '').split(',').map(function (value) {
+      return String(value || '').trim();
+    }).filter(Boolean);
+    var categories = settings.quoteForm.categories || [];
+
+    checklist.innerHTML = categories.map(function (category, index) {
+      var inputId = 'quoteCategoryOption' + String(index);
+      var checked = currentValues.indexOf(category) >= 0 ? ' checked' : '';
+      return (
+        '<label class="option-checklist-item" for="' + inputId + '">' +
+        '<input id="' + inputId + '" type="checkbox" name="quoteCategories" value="' + category + '"' + checked + ' />' +
+        '<span>' + category + '</span>' +
+        '</label>'
+      );
+    }).join('');
+
+    checklist.querySelectorAll('input[name="quoteCategories"]').forEach(function (input) {
+      input.addEventListener('change', function () {
+        clearCategoryChecklistError();
+        updateCategoryFieldValue();
+      });
+    });
+
+    updateCategoryFieldValue();
   }
 
   function applyMaterialOptions(settings) {
@@ -336,13 +370,13 @@
     var normalized = normalizeCategorySlug(cat);
     var map = getCategoryMap(settings);
     var target = map[normalized] || cat;
-
-    var matchedOption = Array.prototype.find.call(categoryField.options, function (opt) {
-      return normalizeCategorySlug(opt.value) === normalizeCategorySlug(target);
+    var matchedInput = Array.prototype.find.call(document.querySelectorAll('input[name="quoteCategories"]'), function (input) {
+      return normalizeCategorySlug(input.value) === normalizeCategorySlug(target);
     });
 
-    if (matchedOption) {
-      categoryField.value = matchedOption.value;
+    if (matchedInput) {
+      matchedInput.checked = true;
+      updateCategoryFieldValue();
     }
   }
 
@@ -482,6 +516,7 @@
   }
 
   function getQuotePayload() {
+    var selectedCategories = getSelectedQuoteCategories();
     return {
       name: (document.getElementById('name') || {}).value || '',
       phone: (document.getElementById('phone') || {}).value || '',
@@ -490,7 +525,7 @@
       stateRegion: (document.getElementById('stateRegion') || {}).value || '',
       postalCode: (document.getElementById('postalCode') || {}).value || '',
       email: (document.getElementById('email') || {}).value || '',
-      category: (document.getElementById('category') || {}).value || '',
+      category: selectedCategories.join(', '),
       requestKind: getSelectedRequestKind(),
       preferredVisitDate: (document.getElementById('preferredVisitDate') || {}).value || '',
       preferredVisitWindow: (document.getElementById('preferredVisitWindow') || {}).value || '',
@@ -667,6 +702,19 @@
       }
 
       var selectedFiles = projectImagesInput ? Array.prototype.slice.call(projectImagesInput.files || []) : [];
+      var selectedCategories = getSelectedQuoteCategories();
+
+      if (!selectedCategories.length) {
+        clearCategoryChecklistError();
+        var checklist = document.getElementById('categoryChecklist');
+        if (checklist) {
+          checklist.classList.add('is-invalid');
+        }
+        statusEl.className = 'form-status error';
+        statusEl.textContent = 'Selecciona al menos una categoría para continuar.';
+        return;
+      }
+
       if (selectedFiles.length > maxImages) {
         statusEl.className = 'form-status error';
         statusEl.textContent = 'Puedes subir hasta ' + String(maxImages) + ' fotos por solicitud.';
@@ -703,6 +751,7 @@
         form.reset();
         renderProjectImagePreview([]);
         applyCategoryOptions(settings);
+        clearCategoryChecklistError();
         bindRequestKindSelector();
       } catch (error) {
         console.error('Quote submission failed:', error);

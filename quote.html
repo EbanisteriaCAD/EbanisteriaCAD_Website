@@ -76,16 +76,10 @@
                 <input id="email" name="email" type="email" required />
               </div>
               <div>
-                <label for="category">Categor&iacute;a *</label>
-                <select id="category" name="categoria" required>
-                  <option value="">Selecciona una categor&iacute;a</option>
-                  <option value="Cocinas">Cocinas</option>
-                  <option value="Closets">Closets</option>
-                  <option value="Centros TV">Centros TV</option>
-                  <option value="Ba&ntilde;os">Ba&ntilde;os</option>
-                  <option value="Comercial">Comercial</option>
-                  <option value="Restauraci&oacute;n">Restauraci&oacute;n</option>
-                </select>
+                <label id="categoryChecklistLabel" for="category">Categor&iacute;as *</label>
+                <input id="category" name="categoria" type="hidden" />
+                <div id="categoryChecklist" class="option-checklist" role="group" aria-labelledby="categoryChecklistLabel" aria-describedby="categoryChecklistHelp"></div>
+                <p id="categoryChecklistHelp" class="field-help">Puedes seleccionar una o varias categor&iacute;as para incluir todo en la misma solicitud.</p>
               </div>
               <div>
                 <label for="measures">Medidas aproximadas</label>
