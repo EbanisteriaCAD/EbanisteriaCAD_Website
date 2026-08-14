@@ -1,4 +1,4 @@
-(function () {
+﻿(function () {
   var PAGE_PATH = window.location.pathname.split('/').pop() || 'index.html';
   var QuoteService = window.QuoteService;
 
@@ -268,7 +268,7 @@
       .trim()
       .replace(/%c3%b1/g, 'n')
       .replace(/\u00f1/g, 'n')
-      .replace(/ñ/g, 'n')
+      .replace(/�/g, 'n')
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[\s_]+/g, '-')
@@ -443,7 +443,11 @@
     maintenanceShell.className = 'site-maintenance-shell';
     maintenanceShell.innerHTML =
       '<div class="site-maintenance-card">' +
-      '<div class="site-maintenance-icon" aria-hidden="true">🚧</div>' +
+      '<div class="site-maintenance-icon" aria-hidden="true">' +
+      '<svg viewBox="0 0 24 24" role="img" focusable="false" aria-hidden="true">' +
+      '<path d="M21 7.5a5.5 5.5 0 0 1-7.91 4.96l-6.13 6.13a1.75 1.75 0 1 1-2.47-2.47l6.13-6.13A5.5 5.5 0 0 1 16.5 3l-2.12 2.12 2.5 2.5L21 5.5v2Z"></path>' +
+      '</svg>' +
+      '</div>' +
       '<h1>Mantenimiento en progreso</h1>' +
       '<p>' + settings.operations.maintenanceMessage + '</p>' +
       '</div>';
@@ -558,7 +562,7 @@
 
       if (oversizedFile) {
         statusEl.className = 'form-status error';
-        statusEl.textContent = 'La foto "' + oversizedFile.name + '" excede el límite de 8 MB.';
+        statusEl.textContent = 'La foto "' + oversizedFile.name + '" excede el limite de 8 MB.';
         return;
       }
 
@@ -576,7 +580,7 @@
         await QuoteService.saveQuote(payload, selectedFiles);
 
         statusEl.classList.add('success');
-        statusEl.textContent = '¡Gracias! Tu solicitud fue enviada correctamente.';
+        statusEl.textContent = 'Gracias! Tu solicitud fue enviada correctamente.';
         form.reset();
         renderProjectImagePreview([]);
         applyCategoryOptions(settings);
@@ -614,3 +618,4 @@
 
   init();
 })();
+

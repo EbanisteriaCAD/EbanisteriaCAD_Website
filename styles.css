@@ -671,6 +671,16 @@ body.site-maintenance-mode .site-footer {
   background: linear-gradient(135deg, rgba(204, 23, 39, 0.12), rgba(204, 23, 39, 0.2));
 }
 
+.site-maintenance-icon svg {
+  width: 42px;
+  height: 42px;
+  fill: none;
+  stroke: #c91d2a;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .site-maintenance-card h1 {
   margin: 0 0 0.75rem;
   font-size: clamp(2rem, 4vw, 3rem);
@@ -1134,8 +1144,12 @@ main p {
 
 @media (max-width: 768px) {
   .hero {
-    background-image: none !important;
-    background: #121212 !important;
+    background-image:
+      linear-gradient(180deg, rgba(17, 19, 24, 0.88) 0%, rgba(17, 19, 24, 0.76) 42%, rgba(17, 19, 24, 0.72) 100%),
+      url("assets/index-hero.jpg") !important;
+    background-size: cover !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
     text-align: center;
     justify-content: center;
     padding: 2rem 1.1rem;

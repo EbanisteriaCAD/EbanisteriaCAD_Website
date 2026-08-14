@@ -18,11 +18,14 @@ import { ContentService } from './content-service.js';
     editingPricingId: '',
     editingRecentProjectId: '',
     editingTestimonialId: '',
+    testimonialMode: 'create',
     designWorkingImages: [],
     recentProjectWorkingImages: [],
     draggingDesignId: '',
     draggingImageId: '',
-    draggingPricingId: ''
+    draggingPricingId: '',
+    draggingRecentProjectId: '',
+    draggingTestimonialId: ''
   };
 
   function byId(id) {
@@ -418,6 +421,7 @@ import { ContentService } from './content-service.js';
     if (form) form.reset();
     if (imageInput) imageInput.value = '';
     state.editingTestimonialId = '';
+    state.testimonialMode = 'create';
     renderPreview('testimonialImagePreview', []);
     showStatus('testimonialFormStatus', '', '');
     setTestimonialEditorVisible(false);
@@ -433,9 +437,13 @@ import { ContentService } from './content-service.js';
   }
 
   function getTestimonialFormData() {
+    var title = (byId('testimonialTitle') || {}).value || '';
+    var baseId = ContentService.slugify(title);
+    var isEditing = state.testimonialMode === 'edit' && !!state.editingTestimonialId;
+
     return {
-      id: state.editingTestimonialId || ContentService.slugify((byId('testimonialTitle') || {}).value || ''),
-      title: (byId('testimonialTitle') || {}).value || ''
+      id: isEditing ? state.editingTestimonialId : (baseId + '-' + Date.now().toString(36)),
+      title: title
     };
   }
 
@@ -458,6 +466,7 @@ import { ContentService } from './content-service.js';
     var item = state.testimonials.find(function (entry) { return entry.id === id; });
     if (!item) return;
 
+    state.testimonialMode = 'edit';
     state.editingTestimonialId = item.id;
     byId('testimonialTitle').value = item.title || '';
     renderPreview('testimonialImagePreview', []);
@@ -477,7 +486,7 @@ import { ContentService } from './content-service.js';
     host.innerHTML = items.map(function (item) {
       var imageCount = Array.isArray(item.images) ? item.images.length : 0;
       return (
-        '<article class="admin-content-item">' +
+        '<article class="admin-content-item" draggable="true" data-recent-project-id="' + escapeHtml(item.id) + '">' +
         '<div class="admin-content-item-media">' +
         (item.coverImage
           ? '<img src="' + escapeHtml(item.coverImage) + '" alt="' + escapeHtml(item.title) + '" />'
@@ -514,7 +523,7 @@ import { ContentService } from './content-service.js';
 
     host.innerHTML = items.map(function (item) {
       return (
-        '<article class="admin-content-item">' +
+        '<article class="admin-content-item" draggable="true" data-testimonial-id="' + escapeHtml(item.id) + '">' +
         '<div class="admin-content-item-media">' +
         (item.imageUrl
           ? '<img src="' + escapeHtml(item.imageUrl) + '" alt="' + escapeHtml(item.title || 'Testimonio') + '" />'
@@ -1024,6 +1033,7 @@ import { ContentService } from './content-service.js';
     if (openBtn) {
       openBtn.addEventListener('click', function () {
         resetTestimonialForm();
+        state.testimonialMode = 'create';
         setTestimonialEditorVisible(true);
       });
     }
@@ -1328,6 +1338,49 @@ import { ContentService } from './content-service.js';
     }
 
     if (recentProjectsHost) {
+      recentProjectsHost.addEventListener('dragstart', function (e) {
+        var target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        var item = target.closest('[data-recent-project-id]');
+        if (!(item instanceof HTMLElement)) return;
+        state.draggingRecentProjectId = item.getAttribute('data-recent-project-id') || '';
+        item.classList.add('is-dragging');
+      });
+
+      recentProjectsHost.addEventListener('dragend', function (e) {
+        var target = e.target;
+        if (target instanceof HTMLElement) {
+          target.classList.remove('is-dragging');
+        }
+        state.draggingRecentProjectId = '';
+      });
+
+      recentProjectsHost.addEventListener('dragover', function (e) {
+        e.preventDefault();
+      });
+
+      recentProjectsHost.addEventListener('drop', async function (e) {
+        e.preventDefault();
+        var target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        var item = target.closest('[data-recent-project-id]');
+        if (!(item instanceof HTMLElement)) return;
+
+        var targetId = item.getAttribute('data-recent-project-id') || '';
+        if (!state.draggingRecentProjectId || !targetId || state.draggingRecentProjectId === targetId) return;
+
+        state.recentProjects = reorderItems(state.recentProjects, state.draggingRecentProjectId, targetId);
+        renderRecentProjects(state.recentProjects);
+
+        try {
+          await ContentService.updateRecentProjectOrder(state.recentProjects);
+          showToast('success', 'Orden de proyectos recientes actualizado.');
+        } catch (error) {
+          console.error('Recent project reorder failed:', error);
+          showStatus('recentProjectFormStatus', 'error', 'No se pudo actualizar el orden de los proyectos recientes.');
+        }
+      });
+
       recentProjectsHost.addEventListener('click', async function (e) {
         var target = e.target;
         if (!(target instanceof HTMLElement)) return;
@@ -1355,6 +1408,49 @@ import { ContentService } from './content-service.js';
     }
 
     if (testimonialsHost) {
+      testimonialsHost.addEventListener('dragstart', function (e) {
+        var target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        var item = target.closest('[data-testimonial-id]');
+        if (!(item instanceof HTMLElement)) return;
+        state.draggingTestimonialId = item.getAttribute('data-testimonial-id') || '';
+        item.classList.add('is-dragging');
+      });
+
+      testimonialsHost.addEventListener('dragend', function (e) {
+        var target = e.target;
+        if (target instanceof HTMLElement) {
+          target.classList.remove('is-dragging');
+        }
+        state.draggingTestimonialId = '';
+      });
+
+      testimonialsHost.addEventListener('dragover', function (e) {
+        e.preventDefault();
+      });
+
+      testimonialsHost.addEventListener('drop', async function (e) {
+        e.preventDefault();
+        var target = e.target;
+        if (!(target instanceof HTMLElement)) return;
+        var item = target.closest('[data-testimonial-id]');
+        if (!(item instanceof HTMLElement)) return;
+
+        var targetId = item.getAttribute('data-testimonial-id') || '';
+        if (!state.draggingTestimonialId || !targetId || state.draggingTestimonialId === targetId) return;
+
+        state.testimonials = reorderItems(state.testimonials, state.draggingTestimonialId, targetId);
+        renderTestimonials(state.testimonials);
+
+        try {
+          await ContentService.updateTestimonialOrder(state.testimonials);
+          showToast('success', 'Orden de testimonios actualizado.');
+        } catch (error) {
+          console.error('Testimonial reorder failed:', error);
+          showStatus('testimonialFormStatus', 'error', 'No se pudo actualizar el orden de los testimonios.');
+        }
+      });
+
       testimonialsHost.addEventListener('click', async function (e) {
         var target = e.target;
         if (!(target instanceof HTMLElement)) return;

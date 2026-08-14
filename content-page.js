@@ -279,7 +279,7 @@ import { ContentService } from './content-service.js';
       '<ul class="package-features package-features-payments">' +
       '<li>Tarjeta de Crédito (Visa, MasterCard)</li>' +
       '<li>Tarjeta de Débito</li>' +
-      '<li>Cheque @ Ebanisteria CAD LLC</li>' +
+      '<li>Cheque @ Ebanistería CAD LLC</li>' +
       '</ul>' +
       '<a class="btn btn-outline" href="contact.html">Consultar Pago</a>' +
       '</article>';
@@ -295,7 +295,7 @@ import { ContentService } from './content-service.js';
     if (!grid) return;
 
     if (!items.length) {
-      setStatus('recentProjectsStatus', 'Todavia no hay proyectos recientes publicados.');
+      setStatus('recentProjectsStatus', 'Todavía no hay proyectos recientes publicados.');
       grid.innerHTML = '';
       return;
     }
@@ -337,11 +337,11 @@ import { ContentService } from './content-service.js';
     if (!grid) return;
 
     if (!items.length) {
-      setStatus('testimonialsStatus', 'Todavia no hay testimonios publicados.');
+      setStatus('testimonialsStatus', 'Todavía no hay testimonios publicados.');
       grid.innerHTML = '';
       if (moreBtn) {
         moreBtn.hidden = true;
-        moreBtn.textContent = 'Ver mas';
+        moreBtn.textContent = 'Ver más';
       }
       return;
     }
@@ -363,7 +363,7 @@ import { ContentService } from './content-service.js';
 
     if (moreBtn) {
       moreBtn.hidden = items.length <= 3;
-      moreBtn.textContent = testimonialsExpanded ? 'Ver menos' : 'Ver mas';
+      moreBtn.textContent = testimonialsExpanded ? 'Ver menos' : 'Ver más';
       moreBtn.onclick = function () {
         testimonialsExpanded = !testimonialsExpanded;
         renderTestimonials(items);

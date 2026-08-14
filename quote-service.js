@@ -714,17 +714,21 @@ var QuoteService;
     assertSafeWrite({ requireConfirmation: true });
     if (current) {
       var auditId = generateEntityId('AUDIT');
-      await adminAuditCollectionRef().doc(auditId).set({
-        id: auditId,
-        projectId: current.id,
-        projectTitle: current.projectTitle || current.category || current.name,
-        clientName: current.name || '',
-        type: 'project_deleted',
-        createdAt: nowTimestamp(),
-        createdBy: getCurrentUserLabel(),
-        status: current.status || '',
-        source: current.source || ''
-      });
+      try {
+        await adminAuditCollectionRef().doc(auditId).set({
+          id: auditId,
+          projectId: current.id,
+          projectTitle: current.projectTitle || current.category || current.name,
+          clientName: current.name || '',
+          type: 'project_deleted',
+          createdAt: nowTimestamp(),
+          createdBy: getCurrentUserLabel(),
+          status: current.status || '',
+          source: current.source || ''
+        });
+      } catch (error) {
+        console.warn('Project delete audit log failed:', error);
+      }
     }
 
     var batch = init().firestore.batch();

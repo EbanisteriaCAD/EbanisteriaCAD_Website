@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Solicitar Cotización | Ebanistería CAD</title>
-  <meta name="description" content="Solicita tu cotización de ebanistería en minutos. Cuéntanos tu categoría, medidas, materiales y presupuesto estimado." />
-  <meta property="og:title" content="Solicitar Cotización | Ebanistería CAD" />
-  <meta property="og:description" content="Completa el formulario y recibe una propuesta para tu proyecto de ebanistería." />
+  <title>Solicitar Cotizaci&oacute;n | Ebanister&iacute;a CAD</title>
+  <meta name="description" content="Solicita tu cotizaci&oacute;n de ebanister&iacute;a en minutos. Cu&eacute;ntanos tu categor&iacute;a, medidas, materiales y presupuesto estimado." />
+  <meta property="og:title" content="Solicitar Cotizaci&oacute;n | Ebanister&iacute;a CAD" />
+  <meta property="og:description" content="Completa el formulario y recibe una propuesta para tu proyecto de ebanister&iacute;a." />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://burgosaxel.github.io/EbanisteriaCAD_Website/quote.html" />
-  <meta property="og:image" content="https://burgosaxel.github.io/EbanisteriaCAD_Website/assets/logo.jpg" />
+  <meta property="og:url" content="https://www.ebanisteriacad.com/quote.html" />
+  <meta property="og:image" content="https://www.ebanisteriacad.com/assets/logo.jpg" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -18,11 +18,10 @@
   <main>
     <section class="section">
       <div class="container">
-        <h1 class="section-title">Solicitar Cotización</h1>
+        <h1 class="section-title">Solicitar Cotizaci&oacute;n</h1>
         <p class="section-subtitle">Completa este formulario y te contactaremos con una propuesta adaptada a tu proyecto.</p>
 
         <div class="form-shell">
-          <!-- Reemplaza XXXXXX con tu endpoint real de Formspree -->
           <form id="quoteForm" action="https://formspree.io/f/XXXXXXXX" method="POST">
             <div class="grid grid-2">
               <div>
@@ -30,11 +29,11 @@
                 <input id="name" name="nombre" type="text" required />
               </div>
               <div>
-                <label for="phone">Teléfono *</label>
+                <label for="phone">Tel&eacute;fono *</label>
                 <input id="phone" name="telefono" type="tel" required />
               </div>
               <div class="form-span-2">
-                <label for="addressLine">Direccion *</label>
+                <label for="addressLine">Direcci&oacute;n *</label>
                 <input id="addressLine" name="direccion" type="text" placeholder="Ej. Urb. Los Pinos, 1A3, Calle Roberto Clemente" required />
               </div>
               <div>
@@ -46,7 +45,7 @@
                 <input id="stateRegion" name="estado" type="text" placeholder="Ej. PR" required />
               </div>
               <div>
-                <label for="postalCode">Codigo Postal *</label>
+                <label for="postalCode">C&oacute;digo Postal *</label>
                 <input id="postalCode" name="codigo_postal" type="text" inputmode="numeric" placeholder="Ej. 00725" required />
               </div>
               <div>
@@ -54,15 +53,15 @@
                 <input id="email" name="email" type="email" required />
               </div>
               <div>
-                <label for="category">Categoría *</label>
+                <label for="category">Categor&iacute;a *</label>
                 <select id="category" name="categoria" required>
-                  <option value="">Selecciona una categoría</option>
+                  <option value="">Selecciona una categor&iacute;a</option>
                   <option value="Cocinas">Cocinas</option>
                   <option value="Closets">Closets</option>
                   <option value="Centros TV">Centros TV</option>
-                  <option value="Baños">Baños</option>
+                  <option value="Ba&ntilde;os">Ba&ntilde;os</option>
                   <option value="Comercial">Comercial</option>
-                  <option value="Remodelación">Remodelación</option>
+                  <option value="Remodelaci&oacute;n">Remodelaci&oacute;n</option>
                 </select>
               </div>
               <div>
@@ -111,8 +110,8 @@
   <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-storage-compat.js"></script>
-  <script type="module" src="firebase-config.js?v=20260414a"></script>
-  <script type="module" src="quote-service.js?v=20260414a"></script>
-  <script type="module" src="script.js?v=20260414a"></script>
+  <script type="module" src="firebase-config.js?v=20260701c"></script>
+  <script type="module" src="quote-service.js?v=20260701c"></script>
+  <script type="module" src="script.js?v=20260701c"></script>
 </body>
 </html>

@@ -400,11 +400,17 @@ var ContentService;
     return snapshot.docs.map(function (doc) {
       return normalizeTestimonial(doc.data());
     }).sort(function (a, b) {
-      var byDate = String(b.createdAt || '').localeCompare(String(a.createdAt || ''));
+      var bySort = (a.sortOrder || 0) - (b.sortOrder || 0);
+      if (bySort !== 0) {
+        return bySort;
+      }
+
+      var byDate = String(a.createdAt || '').localeCompare(String(b.createdAt || ''));
       if (byDate !== 0) {
         return byDate;
       }
-      return (b.sortOrder || 0) - (a.sortOrder || 0);
+
+      return String(a.id || '').localeCompare(String(b.id || ''));
     });
   }
 
@@ -966,6 +972,34 @@ var ContentService;
     await batch.commit();
   }
 
+  async function updateRecentProjectOrder(items) {
+    assertSafeWrite();
+
+    var batch = init().firestore.batch();
+    (Array.isArray(items) ? items : []).forEach(function (item, index) {
+      var docRef = recentProjectsCollection().doc(item.id);
+      batch.update(docRef, {
+        sortOrder: index,
+        updatedAt: new Date().toISOString()
+      });
+    });
+    await batch.commit();
+  }
+
+  async function updateTestimonialOrder(items) {
+    assertSafeWrite();
+
+    var batch = init().firestore.batch();
+    (Array.isArray(items) ? items : []).forEach(function (item, index) {
+      var docRef = testimonialsCollection().doc(item.id);
+      batch.update(docRef, {
+        sortOrder: index,
+        updatedAt: new Date().toISOString()
+      });
+    });
+    await batch.commit();
+  }
+
   async function deletePricingCard(id) {
     assertSafeWrite();
 
@@ -1019,6 +1053,8 @@ var ContentService;
     saveSiteSettings: saveSiteSettings,
     uploadPricingDescriptionImage: uploadPricingDescriptionImage,
     updatePricingCardOrder: updatePricingCardOrder,
+    updateRecentProjectOrder: updateRecentProjectOrder,
+    updateTestimonialOrder: updateTestimonialOrder,
     deletePricingCard: deletePricingCard,
     deleteRecentProject: deleteRecentProject,
     deleteTestimonial: deleteTestimonial,
