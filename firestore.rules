@@ -47,6 +47,9 @@ service cloud.firestore {
           'stateRegion',
           'postalCode',
           'category',
+          'requestKind',
+          'preferredVisitDate',
+          'preferredVisitWindow',
           'message',
           'measures',
           'material',
@@ -70,6 +73,10 @@ service cloud.firestore {
         && data.postalCode is string
         && isNonEmptyString(data.email, 160)
         && isNonEmptyString(data.category, 80)
+        && data.requestKind is string
+        && (data.requestKind == 'quote' || data.requestKind == 'visit')
+        && data.preferredVisitDate is string
+        && data.preferredVisitWindow is string
         && data.projectTitle is string
         && isNonEmptyString(data.message, 4000)
         && data.status is string
