@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Solicitar Cotizaci&oacute;n | Ebanister&iacute;a CAD</title>
-  <meta name="description" content="Solicita tu cotizaci&oacute;n de ebanister&iacute;a en minutos. Cu&eacute;ntanos tu categor&iacute;a, medidas, materiales y presupuesto estimado." />
-  <meta property="og:title" content="Solicitar Cotizaci&oacute;n | Ebanister&iacute;a CAD" />
-  <meta property="og:description" content="Completa el formulario y recibe una propuesta para tu proyecto de ebanister&iacute;a." />
+  <title>Solicitar Cotizaci&oacute;n o Visita | Ebanister&iacute;a CAD</title>
+  <meta name="description" content="Solicita una cotizaci&oacute;n o pide una visita para orientarte con ideas, medidas y opciones para tu proyecto de ebanister&iacute;a." />
+  <meta property="og:title" content="Solicitar Cotizaci&oacute;n o Visita | Ebanister&iacute;a CAD" />
+  <meta property="og:description" content="Completa el formulario y recibe una propuesta o coordina una visita para tu proyecto de ebanister&iacute;a." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://www.ebanisteriacad.com/quote.html" />
   <meta property="og:image" content="https://www.ebanisteriacad.com/assets/logo.jpg" />
@@ -18,11 +18,34 @@
   <main>
     <section class="section">
       <div class="container">
-        <h1 class="section-title">Solicitar Cotizaci&oacute;n</h1>
-        <p class="section-subtitle">Completa este formulario y te contactaremos con una propuesta adaptada a tu proyecto.</p>
+        <h1 id="quotePageTitle" class="section-title">Solicitar Cotizaci&oacute;n o Visita</h1>
+        <p id="quotePageSubtitle" class="section-subtitle">Elige si ya tienes medidas para cotizar o si prefieres que coordinemos una visita para orientarte con ideas y levantamiento.</p>
 
         <div class="form-shell">
           <form id="quoteForm" action="https://formspree.io/f/XXXXXXXX" method="POST">
+            <div>
+              <span class="field-legend">¿Qu&eacute; necesitas?</span>
+              <div class="request-mode-grid" role="radiogroup" aria-label="Tipo de solicitud">
+                <label class="request-mode-card">
+                  <input id="requestKindQuote" name="requestKind" type="radio" value="quote" checked />
+                  <span class="request-mode-copy">
+                    <strong>Solicitar cotizaci&oacute;n</strong>
+                    <small>Ideal si ya tienes medidas, referencias o una idea clara del proyecto.</small>
+                  </span>
+                </label>
+                <label class="request-mode-card">
+                  <input id="requestKindVisit" name="requestKind" type="radio" value="visit" />
+                  <span class="request-mode-copy">
+                    <strong>Solicitar visita</strong>
+                    <small>Para clientes que necesitan ayuda con medidas, distribuci&oacute;n o ideas.</small>
+                  </span>
+                </label>
+              </div>
+              <div id="requestModeNotice" class="request-mode-note" aria-live="polite">
+                Si ya tienes medidas aproximadas, materiales o presupuesto, incl&uacute;yelos para agilizar tu propuesta.
+              </div>
+            </div>
+
             <div class="grid grid-2">
               <div>
                 <label for="name">Nombre *</label>
@@ -86,6 +109,25 @@
               </div>
             </div>
 
+            <div id="visitFields" class="visit-fields" hidden>
+              <div class="grid grid-2">
+                <div>
+                  <label for="preferredVisitDate">Fecha deseada para la visita</label>
+                  <input id="preferredVisitDate" name="fecha_visita" type="date" />
+                </div>
+                <div>
+                  <label for="preferredVisitWindow">Horario preferido</label>
+                  <select id="preferredVisitWindow" name="horario_visita">
+                    <option value="">Selecciona un horario</option>
+                    <option value="Manana">Ma&ntilde;ana</option>
+                    <option value="Tarde">Tarde</option>
+                    <option value="Flexible">Flexible</option>
+                  </select>
+                </div>
+              </div>
+              <p class="field-help">La fecha y el horario son preferencia inicial. Te confirmaremos disponibilidad antes de agendar.</p>
+            </div>
+
             <div>
               <label for="projectImages">Fotos del proyecto</label>
               <input id="projectImages" name="projectImages" type="file" accept="image/*" multiple />
@@ -94,11 +136,11 @@
             </div>
 
             <div>
-              <label for="message">Mensaje *</label>
-              <textarea id="message" name="mensaje" rows="5" required></textarea>
+              <label id="messageLabel" for="message">Mensaje *</label>
+              <textarea id="message" name="mensaje" rows="5" placeholder="Cu&eacute;ntanos sobre tu proyecto, estilo deseado, medidas o dudas." required></textarea>
             </div>
 
-            <button type="submit" class="btn btn-primary">Enviar solicitud</button>
+            <button id="quoteSubmitBtn" type="submit" class="btn btn-primary">Enviar solicitud</button>
             <p id="quoteStatus" class="form-status" role="status" aria-live="polite"></p>
           </form>
         </div>

@@ -334,10 +334,11 @@
 
     applyCategoryOptions(settings);
     applyCategoryFromQuery(settings);
+    bindRequestKindSelector();
 
     var help = document.getElementById('quoteImagesHelp') || document.querySelector('#projectImages + .field-help');
     if (help) {
-      help.textContent = 'Puedes subir hasta ' + String(settings.quoteForm.maxImages || 10) + ' fotos para ayudarnos a entender mejor tu proyecto.';
+      help.textContent = 'Puedes subir hasta ' + String(settings.quoteForm.maxImages || 10) + ' fotos para ayudarnos a entender mejor tu proyecto o el espacio a visitar.';
     }
   }
 
@@ -471,11 +472,108 @@
       postalCode: (document.getElementById('postalCode') || {}).value || '',
       email: (document.getElementById('email') || {}).value || '',
       category: (document.getElementById('category') || {}).value || '',
+      requestKind: getSelectedRequestKind(),
+      preferredVisitDate: (document.getElementById('preferredVisitDate') || {}).value || '',
+      preferredVisitWindow: (document.getElementById('preferredVisitWindow') || {}).value || '',
       measures: (document.getElementById('measures') || {}).value || '',
       material: (document.getElementById('material') || {}).value || '',
       budget: (document.getElementById('budget') || {}).value || '',
       message: (document.getElementById('message') || {}).value || ''
     };
+  }
+
+  function getSelectedRequestKind() {
+    var selected = document.querySelector('input[name="requestKind"]:checked');
+    return selected && selected.value === 'visit' ? 'visit' : 'quote';
+  }
+
+  function updateRequestKindUI() {
+    var form = document.getElementById('quoteForm');
+    if (!form) return;
+
+    var requestKind = getSelectedRequestKind();
+    var isVisit = requestKind === 'visit';
+    var visitFields = document.getElementById('visitFields');
+    var title = document.getElementById('quotePageTitle');
+    var subtitle = document.getElementById('quotePageSubtitle');
+    var notice = document.getElementById('requestModeNotice');
+    var messageLabel = document.getElementById('messageLabel');
+    var messageField = document.getElementById('message');
+    var submitBtn = document.getElementById('quoteSubmitBtn');
+    var measuresField = document.getElementById('measures');
+    var budgetField = document.getElementById('budget');
+    var dateField = document.getElementById('preferredVisitDate');
+
+    if (visitFields) {
+      visitFields.hidden = !isVisit;
+    }
+
+    if (title) {
+      title.innerHTML = isVisit ? 'Solicitar Visita' : 'Solicitar Cotizaci&oacute;n o Visita';
+    }
+
+    if (subtitle) {
+      subtitle.innerHTML = isVisit
+        ? 'Cu&eacute;ntanos qu&eacute; necesitas y coordinaremos una visita para ayudarte con medidas, ideas y orientaci&oacute;n del proyecto.'
+        : 'Elige si ya tienes medidas para cotizar o si prefieres que coordinemos una visita para orientarte con ideas y levantamiento.';
+    }
+
+    if (notice) {
+      notice.textContent = isVisit
+        ? 'No necesitas tener medidas listas. Si puedes, comparte fotos del espacio y una fecha aproximada para visitarte.'
+        : 'Si ya tienes medidas aproximadas, materiales o presupuesto, inclúyelos para agilizar tu propuesta.';
+    }
+
+    if (messageLabel) {
+      messageLabel.textContent = isVisit ? 'Cuentanos en que necesitas ayuda *' : 'Mensaje *';
+    }
+
+    if (messageField) {
+      messageField.placeholder = isVisit
+        ? 'Ej. Necesito ayuda para tomar medidas, definir distribucion y escoger la mejor opcion para mi espacio.'
+        : 'Cuentanos sobre tu proyecto, estilo deseado, medidas o dudas.';
+    }
+
+    if (submitBtn) {
+      submitBtn.textContent = isVisit ? 'Solicitar visita' : 'Enviar solicitud';
+    }
+
+    if (measuresField) {
+      measuresField.placeholder = isVisit ? 'Si no las tienes, puedes dejar este campo en blanco' : 'Ej. 12x10 pies';
+    }
+
+    if (budgetField) {
+      budgetField.placeholder = isVisit ? 'Opcional si todavia estas explorando opciones' : 'Ej. $5,000 - $8,000';
+    }
+
+    if (dateField) {
+      dateField.min = '2026-08-14';
+    }
+  }
+
+  function bindRequestKindSelector() {
+    var form = document.getElementById('quoteForm');
+    if (!form) return;
+
+    var inputs = document.querySelectorAll('input[name="requestKind"]');
+    if (!inputs.length) return;
+
+    var params = new URLSearchParams(window.location.search);
+    var requestedKind = String(params.get('kind') || '').toLowerCase();
+    if (requestedKind === 'visit') {
+      inputs.forEach(function (input) {
+        input.checked = input.value === 'visit';
+      });
+    }
+
+    if (!form.dataset.requestKindBound) {
+      inputs.forEach(function (input) {
+        input.addEventListener('change', updateRequestKindUI);
+      });
+      form.dataset.requestKindBound = 'true';
+    }
+
+    updateRequestKindUI();
   }
 
   function formatBudgetValue(value) {
@@ -580,10 +678,13 @@
         await QuoteService.saveQuote(payload, selectedFiles);
 
         statusEl.classList.add('success');
-        statusEl.textContent = 'Gracias! Tu solicitud fue enviada correctamente.';
+        statusEl.textContent = payload.requestKind === 'visit'
+          ? 'Gracias. Tu solicitud de visita fue enviada correctamente.'
+          : 'Gracias. Tu solicitud fue enviada correctamente.';
         form.reset();
         renderProjectImagePreview([]);
         applyCategoryOptions(settings);
+        bindRequestKindSelector();
       } catch (error) {
         console.error('Quote submission failed:', error);
         statusEl.classList.add('error');

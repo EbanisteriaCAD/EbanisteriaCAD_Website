@@ -595,6 +595,80 @@ form[hidden] {
   grid-column: 1 / -1;
 }
 
+.field-legend {
+  display: block;
+  margin-bottom: 0.7rem;
+  font-weight: 700;
+}
+
+.request-mode-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.request-mode-card {
+  display: block;
+  cursor: pointer;
+}
+
+.request-mode-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.request-mode-copy {
+  display: grid;
+  gap: 0.3rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.request-mode-copy strong {
+  font-size: 1rem;
+}
+
+.request-mode-copy small {
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.request-mode-card input:checked + .request-mode-copy {
+  border-color: var(--primary);
+  background: #fff5f6;
+  box-shadow: 0 0 0 3px rgba(209, 31, 42, 0.12);
+}
+
+.request-mode-card input:focus-visible + .request-mode-copy {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(209, 31, 42, 0.16);
+}
+
+.request-mode-note {
+  margin-top: 0.8rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.visit-fields {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #fbfcfe;
+}
+
+.visit-fields[hidden] {
+  display: none;
+}
+
 .admin-check-row {
   display: flex;
   align-items: center;
@@ -1019,6 +1093,10 @@ th {
 
 @media (min-width: 768px) {
   .grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .request-mode-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
