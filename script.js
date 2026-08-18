@@ -559,31 +559,48 @@
   }
 
   function getQuotePayload() {
+    var requestKind = getSelectedRequestKind();
+    var isVisit = requestKind === 'visit';
     var selectedCategories = getSelectedQuoteCategories();
     var selectedAccessories = getSelectedQuoteAccessories();
     return {
       name: (document.getElementById('name') || {}).value || '',
       phone: (document.getElementById('phone') || {}).value || '',
-      addressLine: (document.getElementById('addressLine') || {}).value || '',
+      addressLine: isVisit ? '' : ((document.getElementById('addressLine') || {}).value || ''),
       city: (document.getElementById('city') || {}).value || '',
-      stateRegion: (document.getElementById('stateRegion') || {}).value || '',
-      postalCode: (document.getElementById('postalCode') || {}).value || '',
+      stateRegion: isVisit ? '' : ((document.getElementById('stateRegion') || {}).value || ''),
+      postalCode: isVisit ? '' : ((document.getElementById('postalCode') || {}).value || ''),
       email: (document.getElementById('email') || {}).value || '',
       category: selectedCategories.join(', '),
-      requestKind: getSelectedRequestKind(),
+      requestKind: requestKind,
       preferredVisitDate: (document.getElementById('preferredVisitDate') || {}).value || '',
       preferredVisitWindow: (document.getElementById('preferredVisitWindow') || {}).value || '',
-      measures: (document.getElementById('measures') || {}).value || '',
-      accessories: selectedAccessories,
-      material: (document.getElementById('material') || {}).value || '',
+      measures: isVisit ? '' : ((document.getElementById('measures') || {}).value || ''),
+      accessories: isVisit ? [] : selectedAccessories,
+      material: isVisit ? '' : ((document.getElementById('material') || {}).value || ''),
       budget: (document.getElementById('budget') || {}).value || '',
-      message: (document.getElementById('message') || {}).value || ''
+      message: isVisit ? '' : ((document.getElementById('message') || {}).value || '')
     };
   }
 
   function getSelectedRequestKind() {
     var selected = document.querySelector('input[name="requestKind"]:checked');
     return selected && selected.value === 'visit' ? 'visit' : 'quote';
+  }
+
+  function toggleFieldVisibility(fieldId, shouldShow) {
+    var field = document.getElementById(fieldId);
+    if (field) {
+      field.hidden = !shouldShow;
+    }
+  }
+
+  function getCurrentLocalDateIso() {
+    var now = new Date();
+    var year = now.getFullYear();
+    var month = String(now.getMonth() + 1).padStart(2, '0');
+    var day = String(now.getDate()).padStart(2, '0');
+    return year + '-' + month + '-' + day;
   }
 
   function updateRequestKindUI() {
@@ -601,10 +618,38 @@
     var submitBtn = document.getElementById('quoteSubmitBtn');
     var measuresField = document.getElementById('measures');
     var budgetField = document.getElementById('budget');
+    var addressField = document.getElementById('addressLine');
+    var stateField = document.getElementById('stateRegion');
+    var postalCodeField = document.getElementById('postalCode');
     var dateField = document.getElementById('preferredVisitDate');
 
     if (visitFields) {
       visitFields.hidden = !isVisit;
+    }
+
+    toggleFieldVisibility('fieldAddressLine', !isVisit);
+    toggleFieldVisibility('fieldStateRegion', !isVisit);
+    toggleFieldVisibility('fieldPostalCode', !isVisit);
+    toggleFieldVisibility('fieldMeasures', !isVisit);
+    toggleFieldVisibility('fieldMaterial', !isVisit);
+    toggleFieldVisibility('fieldAccessories', !isVisit);
+    toggleFieldVisibility('fieldProjectImages', !isVisit);
+    toggleFieldVisibility('fieldMessage', !isVisit);
+
+    if (addressField) {
+      addressField.required = !isVisit;
+    }
+
+    if (stateField) {
+      stateField.required = !isVisit;
+    }
+
+    if (postalCodeField) {
+      postalCodeField.required = !isVisit;
+    }
+
+    if (messageField) {
+      messageField.required = !isVisit;
     }
 
     if (title) {
@@ -619,7 +664,7 @@
 
     if (notice) {
       notice.textContent = isVisit
-        ? 'No necesitas tener medidas listas. Si puedes, comparte fotos del espacio y una fecha aproximada para visitarte.'
+        ? 'Comparte tu pueblo, categoría, presupuesto estimado y tu preferencia de fecha y horario para coordinar la visita.'
         : 'Si ya tienes medidas aproximadas, materiales o presupuesto, inclúyelos para agilizar tu propuesta.';
     }
 
@@ -646,7 +691,7 @@
     }
 
     if (dateField) {
-      dateField.min = '2026-08-14';
+      dateField.min = getCurrentLocalDateIso();
     }
   }
 
@@ -746,7 +791,9 @@
         return;
       }
 
-      var selectedFiles = projectImagesInput ? Array.prototype.slice.call(projectImagesInput.files || []) : [];
+      var selectedFiles = getSelectedRequestKind() === 'visit'
+        ? []
+        : (projectImagesInput ? Array.prototype.slice.call(projectImagesInput.files || []) : []);
       var selectedCategories = getSelectedQuoteCategories();
 
       if (!selectedCategories.length) {
@@ -803,7 +850,7 @@
         console.error('Quote submission failed:', error);
         statusEl.classList.add('error');
         if (error && /permission|insufficient/i.test(String(error.message || ''))) {
-          statusEl.textContent = 'Firebase rechazó la solicitud. Verifica que las reglas publicadas incluyan addressLine, city, stateRegion, postalCode y attachments.';
+          statusEl.textContent = 'Firebase rechazó la solicitud. Verifica que las reglas publicadas estén sincronizadas con los campos actuales del formulario.';
         } else if (error && /storage/i.test(String(error.message || ''))) {
           statusEl.textContent = 'No se pudieron subir las fotos del proyecto. Revisa Storage y el tamaño de cada imagen.';
         } else {

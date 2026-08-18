@@ -47,45 +47,45 @@
             </div>
 
             <div class="grid grid-2">
-              <div>
+              <div id="fieldName">
                 <label for="name">Nombre *</label>
                 <input id="name" name="nombre" type="text" required />
               </div>
-              <div>
+              <div id="fieldPhone">
                 <label for="phone">Tel&eacute;fono *</label>
                 <input id="phone" name="telefono" type="tel" required />
               </div>
-              <div class="form-span-2">
+              <div id="fieldAddressLine" class="form-span-2">
                 <label for="addressLine">Direcci&oacute;n *</label>
                 <input id="addressLine" name="direccion" type="text" placeholder="Ej. Urb. Los Pinos, 1A3, Calle Roberto Clemente" required />
               </div>
-              <div>
+              <div id="fieldCity">
                 <label for="city">Pueblo *</label>
                 <input id="city" name="pueblo" type="text" placeholder="Ej. Caguas" required />
               </div>
-              <div>
+              <div id="fieldStateRegion">
                 <label for="stateRegion">Estado *</label>
                 <input id="stateRegion" name="estado" type="text" placeholder="Ej. PR" required />
               </div>
-              <div>
+              <div id="fieldPostalCode">
                 <label for="postalCode">C&oacute;digo Postal *</label>
                 <input id="postalCode" name="codigo_postal" type="text" inputmode="numeric" placeholder="Ej. 00725" required />
               </div>
-              <div>
+              <div id="fieldEmail">
                 <label for="email">Email *</label>
                 <input id="email" name="email" type="email" required />
               </div>
-              <div>
+              <div id="fieldCategory">
                 <label id="categoryChecklistLabel" for="category">Categor&iacute;as *</label>
                 <input id="category" name="categoria" type="hidden" />
                 <div id="categoryChecklist" class="option-checklist" role="group" aria-labelledby="categoryChecklistLabel" aria-describedby="categoryChecklistHelp"></div>
                 <p id="categoryChecklistHelp" class="field-help">Puedes seleccionar una o varias categor&iacute;as para incluir todo en la misma solicitud.</p>
               </div>
-              <div>
+              <div id="fieldMeasures">
                 <label for="measures">Medidas aproximadas</label>
                 <input id="measures" name="medidas" type="text" placeholder="Ej. 12x10 pies" />
               </div>
-              <div>
+              <div id="fieldMaterial">
                 <label for="material">Material preferido</label>
                 <select id="material" name="material">
                   <option value="">Selecciona un material</option>
@@ -94,13 +94,13 @@
                   <option value="Panel Hidrófugo">Panel Hidrófugo</option>
                 </select>
               </div>
-              <div>
+              <div id="fieldAccessories">
                 <label id="accessoriesChecklistLabel" for="accessoriesSummary">Accesorios</label>
                 <input id="accessoriesSummary" name="accesorios" type="hidden" />
                 <div id="accessoriesChecklist" class="option-checklist" role="group" aria-labelledby="accessoriesChecklistLabel" aria-describedby="accessoriesChecklistHelp"></div>
                 <p id="accessoriesChecklistHelp" class="field-help">Marca los accesorios que quieres incluir o cotizar junto al proyecto.</p>
               </div>
-              <div>
+              <div id="fieldBudget">
                 <label for="budget">Presupuesto estimado</label>
                 <input id="budget" name="presupuesto" type="text" placeholder="Ej. $5,000 - $8,000" />
               </div>
@@ -125,14 +125,14 @@
               <p class="field-help">La fecha y el horario son preferencia inicial. Te confirmaremos disponibilidad antes de agendar.</p>
             </div>
 
-            <div>
+            <div id="fieldProjectImages">
               <label for="projectImages">Fotos del proyecto</label>
               <input id="projectImages" name="projectImages" type="file" accept="image/*" multiple />
               <p id="quoteImagesHelp" class="field-help">Puedes subir hasta 10 fotos para ayudarnos a entender mejor tu proyecto.</p>
               <div id="projectImagesPreview" class="quote-image-preview" hidden></div>
             </div>
 
-            <div>
+            <div id="fieldMessage">
               <label id="messageLabel" for="message">Mensaje *</label>
               <textarea id="message" name="mensaje" rows="5" placeholder="Cu&eacute;ntanos sobre tu proyecto, estilo deseado, medidas o dudas." required></textarea>
             </div>

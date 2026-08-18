@@ -66,10 +66,10 @@ service cloud.firestore {
         && (data.type == 'quote' || data.type == 'project')
         && isNonEmptyString(data.name, 120)
         && isNonEmptyString(data.phone, 40)
-        && isNonEmptyString(data.address, 240)
+        && data.address is string
         && isNonEmptyString(data.city, 120)
-        && isNonEmptyString(data.stateRegion, 32)
-        && isNonEmptyString(data.zipCode, 20)
+        && data.stateRegion is string
+        && data.zipCode is string
         && data.addressLine is string
         && data.postalCode is string
         && isNonEmptyString(data.email, 160)
@@ -79,7 +79,15 @@ service cloud.firestore {
         && data.preferredVisitDate is string
         && data.preferredVisitWindow is string
         && data.projectTitle is string
-        && isNonEmptyString(data.message, 4000)
+        && data.message is string
+        && (
+          (data.requestKind == 'quote'
+            && isNonEmptyString(data.address, 240)
+            && isNonEmptyString(data.stateRegion, 32)
+            && isNonEmptyString(data.zipCode, 20)
+            && isNonEmptyString(data.message, 4000))
+          || data.requestKind == 'visit'
+        )
         && data.accessories is list
         && data.status is string
         && (data.status == 'new' || data.status == 'in_progress' || data.status == 'completed' || data.status == 'archived')
