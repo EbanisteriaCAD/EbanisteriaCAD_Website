@@ -659,7 +659,7 @@
     if (subtitle) {
       subtitle.innerHTML = isVisit
         ? 'Cu&eacute;ntanos qu&eacute; necesitas y coordinaremos una visita para ayudarte con medidas, ideas y orientaci&oacute;n del proyecto.'
-        : 'Elige si ya tienes medidas para cotizar o si prefieres que coordinemos una visita para orientarte con ideas y levantamiento.';
+        : 'Elige si ya tienes medidas para cotizar o si prefieres que coordinemos una visita para orientarte con ideas.';
     }
 
     if (notice) {
