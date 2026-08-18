@@ -430,6 +430,7 @@
     applyAccessoriesOptions(settings);
     applyMaterialOptions(settings);
     applyCategoryFromQuery(settings);
+    bindVisitDatePicker();
     bindRequestKindSelector();
 
     var help = document.getElementById('quoteImagesHelp') || document.querySelector('#projectImages + .field-help');
@@ -573,7 +574,7 @@
       email: (document.getElementById('email') || {}).value || '',
       category: selectedCategories.join(', '),
       requestKind: requestKind,
-      preferredVisitDate: (document.getElementById('preferredVisitDate') || {}).value || '',
+      preferredVisitDate: ((document.getElementById('preferredVisitDate') || {}).dataset || {}).isoValue || '',
       preferredVisitWindow: (document.getElementById('preferredVisitWindow') || {}).value || '',
       measures: isVisit ? '' : ((document.getElementById('measures') || {}).value || ''),
       accessories: isVisit ? [] : selectedAccessories,
@@ -601,6 +602,211 @@
     var month = String(now.getMonth() + 1).padStart(2, '0');
     var day = String(now.getDate()).padStart(2, '0');
     return year + '-' + month + '-' + day;
+  }
+
+  function parseIsoDate(value) {
+    var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || '').trim());
+    if (!match) return null;
+
+    var year = Number(match[1]);
+    var monthIndex = Number(match[2]) - 1;
+    var day = Number(match[3]);
+    var date = new Date(year, monthIndex, day);
+    if (date.getFullYear() !== year || date.getMonth() !== monthIndex || date.getDate() !== day) {
+      return null;
+    }
+
+    return date;
+  }
+
+  function formatIsoDate(date) {
+    if (!(date instanceof Date)) return '';
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+  }
+
+  function formatHumanDate(date) {
+    if (!(date instanceof Date)) return '';
+    return date.toLocaleDateString('es-PR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    });
+  }
+
+  function isWeekendDate(date) {
+    if (!(date instanceof Date)) return false;
+    var day = date.getDay();
+    return day === 0 || day === 6;
+  }
+
+  function getNextBusinessDate(startDate) {
+    var date = startDate instanceof Date
+      ? new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate())
+      : parseIsoDate(getCurrentLocalDateIso());
+
+    while (isWeekendDate(date)) {
+      date.setDate(date.getDate() + 1);
+    }
+
+    return date;
+  }
+
+  function bindVisitDatePicker() {
+    var input = document.getElementById('preferredVisitDate');
+    var calendar = document.getElementById('preferredVisitDateCalendar');
+    var form = document.getElementById('quoteForm');
+    if (!input || !calendar || input.dataset.calendarBound === 'true') return;
+
+    var todayIso = getCurrentLocalDateIso();
+    var minDate = getNextBusinessDate(parseIsoDate(todayIso));
+    var selectedDate = parseIsoDate(input.dataset.isoValue || '');
+    if (selectedDate && (selectedDate < minDate || isWeekendDate(selectedDate))) {
+      selectedDate = null;
+    }
+
+    if (selectedDate) {
+      input.dataset.isoValue = formatIsoDate(selectedDate);
+      input.value = formatHumanDate(selectedDate);
+    } else {
+      input.dataset.isoValue = '';
+      input.value = '';
+    }
+
+    var visibleMonth = new Date((selectedDate || minDate).getFullYear(), (selectedDate || minDate).getMonth(), 1);
+
+    function canGoPrev() {
+      var prevMonthLastDate = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 0);
+      return prevMonthLastDate >= minDate;
+    }
+
+    function closeCalendar() {
+      calendar.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+    }
+
+    function renderCalendar() {
+      var firstDay = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth(), 1);
+      var startOffset = (firstDay.getDay() + 6) % 7;
+      var gridStart = new Date(firstDay.getFullYear(), firstDay.getMonth(), 1 - startOffset);
+      var monthLabel = visibleMonth.toLocaleDateString('es-PR', { month: 'long', year: 'numeric' });
+      var buttons = [];
+
+      for (var dayIndex = 0; dayIndex < 42; dayIndex += 1) {
+        var cellDate = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + dayIndex);
+        var isoValue = formatIsoDate(cellDate);
+        var isPast = cellDate < minDate;
+        var isWeekend = isWeekendDate(cellDate);
+        var isOutsideMonth = cellDate.getMonth() !== visibleMonth.getMonth();
+        var isSelected = selectedDate && formatIsoDate(selectedDate) === isoValue;
+        var isToday = isoValue === todayIso;
+        var classNames = ['visit-date-calendar-day'];
+
+        if (isWeekend) classNames.push('is-weekend');
+        if (isOutsideMonth) classNames.push('is-outside');
+        if (isSelected) classNames.push('is-selected');
+        if (isToday) classNames.push('is-today');
+
+        buttons.push(
+          '<button type="button" class="' + classNames.join(' ') + '" data-date-value="' + isoValue + '"' + (isPast || isWeekend ? ' disabled' : '') + '>' +
+          String(cellDate.getDate()) +
+          '</button>'
+        );
+      }
+
+      calendar.innerHTML =
+        '<div class="visit-date-calendar-head">' +
+        '<button type="button" class="visit-date-calendar-nav" data-calendar-nav="prev"' + (canGoPrev() ? '' : ' disabled') + ' aria-label="Mes anterior">&#8249;</button>' +
+        '<div class="visit-date-calendar-title">' + monthLabel + '</div>' +
+        '<button type="button" class="visit-date-calendar-nav" data-calendar-nav="next" aria-label="Mes siguiente">&#8250;</button>' +
+        '</div>' +
+        '<div class="visit-date-calendar-weekdays">' +
+        '<span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>' +
+        '</div>' +
+        '<div class="visit-date-calendar-grid">' + buttons.join('') + '</div>' +
+        '<p class="visit-date-calendar-note">Los fines de semana no están disponibles para visitas.</p>';
+    }
+
+    function openCalendar() {
+      renderCalendar();
+      calendar.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+    }
+
+    function setSelectedDate(date) {
+      selectedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      input.dataset.isoValue = formatIsoDate(selectedDate);
+      input.value = formatHumanDate(selectedDate);
+      closeCalendar();
+    }
+
+    input.setAttribute('aria-haspopup', 'dialog');
+    input.setAttribute('aria-expanded', 'false');
+
+    input.addEventListener('click', function () {
+      if (calendar.hidden) {
+        openCalendar();
+      } else {
+        closeCalendar();
+      }
+    });
+
+    input.addEventListener('keydown', function (event) {
+      if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowDown') {
+        event.preventDefault();
+        openCalendar();
+      } else if (event.key === 'Escape') {
+        closeCalendar();
+      }
+    });
+
+    calendar.addEventListener('click', function (event) {
+      var target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+
+      var navButton = target.closest('[data-calendar-nav]');
+      if (navButton instanceof HTMLElement) {
+        visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + (navButton.getAttribute('data-calendar-nav') === 'next' ? 1 : -1), 1);
+        if (visibleMonth < new Date(minDate.getFullYear(), minDate.getMonth(), 1)) {
+          visibleMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+        }
+        renderCalendar();
+        return;
+      }
+
+      var dayButton = target.closest('[data-date-value]');
+      if (!(dayButton instanceof HTMLElement) || dayButton.hasAttribute('disabled')) return;
+
+      var date = parseIsoDate(dayButton.getAttribute('data-date-value'));
+      if (date && !isWeekendDate(date) && date >= minDate) {
+        setSelectedDate(date);
+      }
+    });
+
+    document.addEventListener('click', function (event) {
+      var target = event.target;
+      if (!(target instanceof Node)) return;
+      if (!calendar.hidden && !calendar.contains(target) && target !== input) {
+        closeCalendar();
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && !calendar.hidden) {
+        closeCalendar();
+      }
+    });
+
+    if (form) {
+      form.addEventListener('reset', function () {
+        selectedDate = null;
+        visibleMonth = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+        input.dataset.isoValue = '';
+        input.value = '';
+        closeCalendar();
+      });
+    }
+
+    input.dataset.calendarBound = 'true';
   }
 
   function updateRequestKindUI() {
@@ -690,8 +896,12 @@
       budgetField.placeholder = isVisit ? 'Opcional si todavia estas explorando opciones' : 'Ej. $5,000 - $8,000';
     }
 
-    if (dateField) {
-      dateField.min = getCurrentLocalDateIso();
+    if (dateField && isVisit) {
+      var visitDate = parseIsoDate(dateField.dataset.isoValue || '');
+      if (visitDate && isWeekendDate(visitDate)) {
+        dateField.dataset.isoValue = '';
+        dateField.value = '';
+      }
     }
   }
 

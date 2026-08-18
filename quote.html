@@ -110,7 +110,10 @@
               <div class="grid grid-2">
                 <div>
                   <label for="preferredVisitDate">Fecha deseada para la visita</label>
-                  <input id="preferredVisitDate" name="fecha_visita" type="date" />
+                  <div class="visit-date-picker">
+                    <input id="preferredVisitDate" name="fecha_visita" type="text" inputmode="none" autocomplete="off" placeholder="Selecciona una fecha" readonly />
+                    <div id="preferredVisitDateCalendar" class="visit-date-calendar" hidden></div>
+                  </div>
                 </div>
                 <div>
                   <label for="preferredVisitWindow">Horario preferido</label>
