@@ -655,6 +655,7 @@
     var input = document.getElementById('preferredVisitDate');
     var calendar = document.getElementById('preferredVisitDateCalendar');
     var form = document.getElementById('quoteForm');
+    var picker = input ? input.closest('.visit-date-picker') : null;
     if (!input || !calendar || input.dataset.calendarBound === 'true') return;
 
     var todayIso = getCurrentLocalDateIso();
@@ -760,6 +761,8 @@
     });
 
     calendar.addEventListener('click', function (event) {
+      event.stopPropagation();
+
       var target = event.target;
       if (!(target instanceof HTMLElement)) return;
 
@@ -785,7 +788,7 @@
     document.addEventListener('click', function (event) {
       var target = event.target;
       if (!(target instanceof Node)) return;
-      if (!calendar.hidden && !calendar.contains(target) && target !== input) {
+      if (!calendar.hidden && !(picker && picker.contains(target))) {
         closeCalendar();
       }
     });
