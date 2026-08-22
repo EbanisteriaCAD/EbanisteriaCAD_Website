@@ -228,6 +228,7 @@
       '<a class="footer-icon" href="https://wa.me/' + contact.whatsappNumber + '" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">WhatsApp</a>' +
       '</div>' +
       '<p>' + business.footerCopyright + '</p>' +
+      '<p class="footer-credit">Built by <a href="https://firstlinedev.com" target="_blank" rel="noopener noreferrer">FirstLine Development</a></p>' +
       '</div>';
   }
 
