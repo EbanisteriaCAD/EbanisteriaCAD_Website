@@ -74,6 +74,7 @@
       ".firebaserc",
       ".gitignore",
       ".git/**",
+      ".codex-remote-attachments/**",
       "**/.*",
       "**/node_modules/**",
       "firebase-debug.log",
