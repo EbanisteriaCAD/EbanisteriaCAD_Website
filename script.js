@@ -211,23 +211,29 @@
     var social = settings.social;
     var contact = settings.contact;
     var business = settings.business;
+    var footerCopyright = String(business.footerCopyright || '');
+    var firstSentenceEnd = footerCopyright.indexOf('. ');
+    var footerCopyrightHtml = firstSentenceEnd >= 0
+      ? '<span>' + footerCopyright.slice(0, firstSentenceEnd + 1) + '</span><span>' + footerCopyright.slice(firstSentenceEnd + 2) + '</span>'
+      : '<span>' + footerCopyright + '</span>';
 
     footer.innerHTML =
       '<div class="container footer-inner">' +
-      '<div class="footer-links">' +
+      '<div class="footer-nav">' +
+      '<div class="footer-column footer-column-main">' +
       '<a class="footer-link" href="about.html">Nosotros</a>' +
       '<a class="footer-link" href="designs.html">Diseños</a>' +
       '<a class="footer-link" href="pricing.html">Precios</a>' +
-      '<a class="footer-link" href="contact.html">Contáctenos</a>' +
       '<a class="footer-link" href="quote.html">Cotizar Ahora</a>' +
       '</div>' +
-      '<div class="footer-social">' +
+      '<div class="footer-column footer-column-social">' +
       '<a class="footer-icon" href="' + social.facebookUrl + '" target="_blank" rel="noopener noreferrer" aria-label="Facebook">Facebook</a>' +
       '<a class="footer-icon" href="' + social.instagramUrl + '" target="_blank" rel="noopener noreferrer" aria-label="Instagram">Instagram</a>' +
       '<a class="footer-icon" href="' + social.tiktokUrl + '" target="_blank" rel="noopener noreferrer" aria-label="TikTok">TikTok</a>' +
       '<a class="footer-icon" href="https://wa.me/' + contact.whatsappNumber + '" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">WhatsApp</a>' +
       '</div>' +
-      '<p>' + business.footerCopyright + '</p>' +
+      '</div>' +
+      '<p class="footer-copyright">' + footerCopyrightHtml + '</p>' +
       '<p class="footer-credit">Built by <a href="https://firstlinedev.com" target="_blank" rel="noopener noreferrer">FirstLine Development</a></p>' +
       '</div>';
   }
